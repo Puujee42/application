@@ -1,0 +1,63 @@
+{
+    "app": {
+        "name": "Gevabal",
+        "tagline": "Spiritual Guidance"
+    },
+    "nav": {
+        "home": "Home",
+        "tours": "Tours",
+        "monks": "Monks",
+        "profile": "Profile"
+    },
+    "home": {
+        "welcome": "Welcome to Gevabal",
+        "bookSession": "Book a Session",
+        "featuredMonks": "Featured Monks",
+        "quickActions": "Quick Actions"
+    },
+    "auth": {
+        "signIn": "Sign In",
+        "signUp": "Sign Up",
+        "signOut": "Sign Out",
+        "email": "Email",
+        "password": "Password",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "welcomeBack": "Welcome back",
+        "createAccount": "Create account",
+        "noAccount": "Don't have an account?",
+        "hasAccount": "Already have an account?",
+        "verifyEmail": "Verify Email",
+        "checkEmail": "Check your email"
+    },
+    "monks": {
+        "title": "Monks",
+        "subtitle": "Book spiritual guidance sessions",
+        "available": "Available",
+        "unavailable": "Unavailable",
+        "bookSession": "Book Session",
+        "about": "About",
+        "services": "Services"
+    },
+    "tours": {
+        "title": "Tours",
+        "subtitle": "Discover spiritual journeys",
+        "overview": "Overview",
+        "itinerary": "Itinerary",
+        "included": "What's Included",
+        "bookNow": "Book Now"
+    },
+    "profile": {
+        "myBookings": "My Bookings",
+        "favorites": "Favorites",
+        "settings": "Settings"
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "Something went wrong",
+        "retry": "Retry",
+        "cancel": "Cancel",
+        "save": "Save",
+        "back": "Back"
+    }
+}

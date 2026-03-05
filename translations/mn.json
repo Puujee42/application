@@ -1,0 +1,63 @@
+{
+    "app": {
+        "name": "Гэвабал",
+        "tagline": "Оюун санаатай холбогдоорой"
+    },
+    "nav": {
+        "home": "Нүүр",
+        "tours": "Аялал",
+        "monks": "Лам нар",
+        "profile": "Профайл"
+    },
+    "home": {
+        "welcome": "Гэвабал-д тавтай морил",
+        "bookSession": "Захиалга хийх",
+        "featuredMonks": "Онцлох лам нар",
+        "quickActions": "Түргэн үйлдлүүд"
+    },
+    "auth": {
+        "signIn": "Нэвтрэх",
+        "signUp": "Бүртгүүлэх",
+        "signOut": "Гарах",
+        "email": "Имэйл",
+        "password": "Нууц үг",
+        "firstName": "Овог",
+        "lastName": "Нэр",
+        "welcomeBack": "Тавтай морил",
+        "createAccount": "Бүртгэл үүсгэх",
+        "noAccount": "Бүртгэлгүй юу?",
+        "hasAccount": "Бүртгэлтэй юу?",
+        "verifyEmail": "Имэйл баталгаажуулах",
+        "checkEmail": "Имэйлээ шалгана уу"
+    },
+    "monks": {
+        "title": "Лам нар",
+        "subtitle": "Оюун санааны зөвлөгөө авах",
+        "available": "Боломжтой",
+        "unavailable": "Боломжгүй",
+        "bookSession": "Захиалах",
+        "about": "Танилцуулга",
+        "services": "Үйлчилгээ"
+    },
+    "tours": {
+        "title": "Аялал",
+        "subtitle": "Оюун санааны аялал",
+        "overview": "Тойм",
+        "itinerary": "Хөтөлбөр",
+        "included": "Багтсан зүйлс",
+        "bookNow": "Одоо захиалах"
+    },
+    "profile": {
+        "myBookings": "Миний захиалгууд",
+        "favorites": "Дуртай",
+        "settings": "Тохиргоо"
+    },
+    "common": {
+        "loading": "Уншиж байна...",
+        "error": "Алдаа гарлаа",
+        "retry": "Дахин оролдох",
+        "cancel": "Цуцлах",
+        "save": "Хадгалах",
+        "back": "Буцах"
+    }
+}

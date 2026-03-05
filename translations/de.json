@@ -1,0 +1,63 @@
+{
+    "app": {
+        "name": "Gevabal",
+        "tagline": "Spirituelle Führung"
+    },
+    "nav": {
+        "home": "Startseite",
+        "tours": "Touren",
+        "monks": "Mönche",
+        "profile": "Profil"
+    },
+    "home": {
+        "welcome": "Willkommen bei Gevabal",
+        "bookSession": "Sitzung buchen",
+        "featuredMonks": "Ausgewählte Mönche",
+        "quickActions": "Schnellaktionen"
+    },
+    "auth": {
+        "signIn": "Anmelden",
+        "signUp": "Registrieren",
+        "signOut": "Abmelden",
+        "email": "E-Mail",
+        "password": "Passwort",
+        "firstName": "Vorname",
+        "lastName": "Nachname",
+        "welcomeBack": "Willkommen zurück",
+        "createAccount": "Konto erstellen",
+        "noAccount": "Kein Konto?",
+        "hasAccount": "Bereits registriert?",
+        "verifyEmail": "E-Mail verifizieren",
+        "checkEmail": "Überprüfen Sie Ihre E-Mail"
+    },
+    "monks": {
+        "title": "Mönche",
+        "subtitle": "Spirituelle Beratung buchen",
+        "available": "Verfügbar",
+        "unavailable": "Nicht verfügbar",
+        "bookSession": "Sitzung buchen",
+        "about": "Über",
+        "services": "Dienstleistungen"
+    },
+    "tours": {
+        "title": "Touren",
+        "subtitle": "Spirituelle Reisen entdecken",
+        "overview": "Übersicht",
+        "itinerary": "Reiseplan",
+        "included": "Inklusive",
+        "bookNow": "Jetzt buchen"
+    },
+    "profile": {
+        "myBookings": "Meine Buchungen",
+        "favorites": "Favoriten",
+        "settings": "Einstellungen"
+    },
+    "common": {
+        "loading": "Laden...",
+        "error": "Ein Fehler ist aufgetreten",
+        "retry": "Erneut versuchen",
+        "cancel": "Abbrechen",
+        "save": "Speichern",
+        "back": "Zurück"
+    }
+}
