@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Given Mobile",
+    "name": "Гэвабал",
     "slug": "given-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FFFBF0"
     },
     "ios": {
       "supportsTablet": true,
@@ -20,7 +20,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#FFFBF0"
       },
       "package": "mn.gevabal.mobile",
       "edgeToEdgeEnabled": true
@@ -41,8 +41,8 @@
       [
         "@config-plugins/react-native-webrtc",
         {
-          "cameraPermission": "Allow Given Mobile to access your camera for video calls.",
-          "microphonePermission": "Allow Given Mobile to access your microphone for video calls."
+          "cameraPermission": "Гэвабал аппд камер ашиглах зөвшөөрөл өгнө үү.",
+          "microphonePermission": "Гэвабал аппд микрофон ашиглах зөвшөөрөл өгнө үү."
         }
       ]
     ]

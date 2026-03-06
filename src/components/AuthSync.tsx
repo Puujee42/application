@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '../../lib/useClerkSafe';
 import * as SecureStore from 'expo-secure-store';
 import { useUserStore } from '../../store/userStore';
 import { useAuthStore } from '../../store/authStore';

@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { useQuery } from '@tanstack/react-query';
 import { getMonks } from '../../lib/api';
-import { useUser } from '@clerk/clerk-expo';
+import { useUser } from '../../lib/useClerkSafe';
 import { useUserStore } from '../../store/userStore';
 import { useAuthStore } from '../../store/authStore';
 import { useIsAuthenticated } from '../../hooks/useIsAuthenticated';

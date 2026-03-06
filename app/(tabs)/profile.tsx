@@ -1,41 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import {
-    ScrollView,
-    View,
-    Text,
-    TouchableOpacity,
-    StyleSheet,
-    RefreshControl,
+    ScrollView, View, Text, Pressable,
+    StyleSheet, RefreshControl, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '../../lib/useClerkSafe';
 import { useQuery } from '@tanstack/react-query';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
-    Sparkles,
-    ShoppingBag,
-    Bell,
-    BookOpen,
-    CreditCard,
-    Settings,
-    LogOut,
-    ChevronRight,
+    Calendar, Bell, BookOpen, CreditCard,
+    Settings, LogOut, ChevronRight,
 } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useUserStore } from '../../store/userStore';
 import { useAuthStore } from '../../store/authStore';
 import { useIsAuthenticated } from '../../hooks/useIsAuthenticated';
 import api from '../../lib/api';
-import * as Haptics from 'expo-haptics';
+import { COLORS, SHADOWS } from '../../design-system/theme';
 
+// ─── MENU ─────────────────────────────────────────────
 const MENU_ITEMS = [
-    { icon: ShoppingBag, label: 'Миний захиалгууд', route: '/my-bookings', color: '#333333' },
-    { icon: Bell, label: 'Мэдэгдэл', route: null, color: '#333333' },
-    { icon: BookOpen, label: 'Блог', route: '/(tabs)/blog', color: '#333333' },
-    { icon: CreditCard, label: 'Төлбөр', route: null, color: '#333333' },
-    { icon: Settings, label: 'Тохиргоо', route: '/settings', color: '#333333' },
-    { icon: LogOut, label: 'Гарах', route: 'logout', color: '#EF4444' },
-];
+    { icon: Calendar, emoji: '📅', label: 'Миний захиалгууд', route: '/my-bookings' },
+    { icon: Bell, emoji: '🔔', label: 'Мэдэгдэл', route: null },
+    { icon: BookOpen, emoji: '📰', label: 'Блог', route: '/(tabs)/blog' },
+    { icon: CreditCard, emoji: '💳', label: 'Төлбөрийн түүх', route: null },
+    { icon: Settings, emoji: '⚙️', label: 'Тохиргоо', route: '/settings' },
+    { icon: LogOut, emoji: '🚪', label: 'Гарах', route: 'logout', isLogout: true },
+] as const;
 
 export default function ProfileScreen() {
     const router = useRouter();
@@ -70,234 +64,244 @@ export default function ProfileScreen() {
     const completedBookings = bookings?.filter((b: any) =>
         ['completed', 'confirmed'].includes(b.status)
     ).length || 0;
-    const uniqueMonks = bookings
+    const favCount = bookings
         ? new Set(bookings.map((b: any) => b.monkId)).size
         : 0;
 
     const displayName =
         dbUser?.firstName || customUser?.firstName || clerkUser?.firstName || 'Зочин';
+    const fullName = dbUser?.firstName
+        ? `${dbUser.firstName} ${dbUser.lastName || ''}`
+        : clerkUser?.fullName || displayName;
     const email =
         dbUser?.email || customUser?.email || clerkUser?.primaryEmailAddress?.emailAddress || '';
     const avatarUri =
         (dbUser as any)?.image || dbUser?.avatar || clerkUser?.imageUrl || 'https://i.pravatar.cc/150?u=self';
+    const isAdmin = (dbUser as any)?.role === 'admin';
 
+    // ── GUEST STATE ──
     if (!isAuthenticated) {
         return (
-            <View style={styles.container}>
-                <SafeAreaView style={[styles.flex, styles.centerContent]} edges={['top']}>
-                    <View style={styles.guestAvatar}>
-                        <Text style={styles.guestAvatarText}>👤</Text>
-                    </View>
-                    <Text style={styles.guestTitle}>Нэвтрэх</Text>
-                    <Text style={styles.guestSubtitle}>
+            <View style={[st.container, st.center]}>
+                <SafeAreaView style={st.center} edges={['top']}>
+                    <LinearGradient
+                        colors={[COLORS.gold, COLORS.deepGold]}
+                        style={st.avatarRing}
+                    >
+                        <Image
+                            source={{ uri: 'https://i.pravatar.cc/150?u=self' }}
+                            style={st.avatarImage}
+                            contentFit="cover"
+                        />
+                    </LinearGradient>
+                    <Text style={st.guestTitle}>Нэвтрэх</Text>
+                    <Text style={st.guestSub}>
                         Цаг захиалах, түүхээ харахын тулд нэвтэрнэ үү
                     </Text>
-                    <TouchableOpacity
-                        style={styles.signInButton}
-                        activeOpacity={0.8}
-                        onPress={() => router.push('/(auth)/sign-in')}
+                    <Pressable onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        router.push('/(auth)/sign-in');
+                    }}>
+                        <LinearGradient colors={[COLORS.gold, COLORS.deepGold]} style={[st.guestBtn, SHADOWS.gold]}>
+                            <Text style={st.guestBtnText}>НЭВТРЭХ</Text>
+                        </LinearGradient>
+                    </Pressable>
+                    <Pressable
+                        onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            router.push('/(auth)/sign-up');
+                        }}
+                        style={st.guestOutlineBtn}
                     >
-                        <Text style={styles.signInButtonText}>Нэвтрэх</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.signUpButton}
-                        activeOpacity={0.8}
-                        onPress={() => router.push('/(auth)/sign-up')}
-                    >
-                        <Text style={styles.signUpButtonText}>Бүртгүүлэх</Text>
-                    </TouchableOpacity>
+                        <Text style={st.guestOutlineBtnText}>БҮРТГҮҮЛЭХ</Text>
+                    </Pressable>
                 </SafeAreaView>
             </View>
         );
     }
 
-    const handleMenuPress = async (route: string | null) => {
+    // ── MENU HANDLER ──
+    const handleMenuPress = async (route: string | null, isLogout?: boolean) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        if (route === 'logout') {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            if (isCustomAuth) await customLogout();
-            if (isSignedIn) await signOut();
-            router.replace('/(auth)/sign-in');
+        if (isLogout) {
+            Alert.alert(
+                'Гарах',
+                'Та гарахдаа итгэлтэй байна уу?',
+                [
+                    { text: 'Үгүй', style: 'cancel' },
+                    {
+                        text: 'Тийм', style: 'destructive',
+                        onPress: async () => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                            if (isCustomAuth) await customLogout();
+                            if (isSignedIn) await signOut();
+                            router.replace('/(auth)/sign-in');
+                        },
+                    },
+                ]
+            );
             return;
         }
         if (route) router.push(route as any);
     };
 
     return (
-        <View style={styles.container}>
-            <SafeAreaView style={styles.flex} edges={['top']}>
+        <View style={st.container}>
+            <SafeAreaView style={{ flex: 1 }} edges={['top']}>
                 <ScrollView
-                    style={styles.flex}
-                    contentContainerStyle={styles.scrollContent}
+                    contentContainerStyle={st.scroll}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing || isLoading}
                             onRefresh={onRefresh}
-                            tintColor="#E5B22D"
-                            colors={['#E5B22D']}
+                            tintColor={COLORS.gold}
+                            colors={[COLORS.gold]}
                         />
                     }
                 >
-                    {/* ===== AVATAR SECTION ===== */}
-                    <View style={styles.avatarSection}>
-                        <View style={styles.avatarBorder}>
+                    {/* ─── AVATAR ─── */}
+                    <Animated.View entering={FadeInDown.delay(100).duration(600)} style={st.avatarSection}>
+                        <LinearGradient
+                            colors={[COLORS.gold, COLORS.deepGold]}
+                            style={st.avatarRing}
+                        >
                             <Image
                                 source={{ uri: avatarUri }}
-                                style={styles.avatarImage}
+                                style={st.avatarImage}
                                 contentFit="cover"
                             />
-                        </View>
-                        <Text style={styles.profileName}>{displayName}</Text>
-                        <Text style={styles.profileEmail}>{email}</Text>
+                        </LinearGradient>
 
-                        <View style={styles.premiumBadge}>
-                            <Sparkles size={14} color="#E5B22D" />
-                            <Text style={styles.premiumText}>Premium гишүүн</Text>
-                        </View>
-                    </View>
+                        <Text style={st.profileName}>{fullName}</Text>
+                        <Text style={st.profileEmail}>{email}</Text>
 
-                    {/* ===== STATS CARD ===== */}
-                    <View style={styles.statsCard}>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>{totalBookings}</Text>
-                            <Text style={styles.statLabel}>Захиалга</Text>
+                        <View style={st.premiumBadge}>
+                            <Text style={st.premiumText}>✨ Premium гишүүн</Text>
                         </View>
-                        <View style={styles.statDivider} />
-                        <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>{completedBookings}</Text>
-                            <Text style={styles.statLabel}>Дууссан</Text>
-                        </View>
-                        <View style={styles.statDivider} />
-                        <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>{uniqueMonks}</Text>
-                            <Text style={styles.statLabel}>Үзмэрч</Text>
-                        </View>
-                    </View>
+                    </Animated.View>
 
-                    {/* ===== MENU OPTIONS ===== */}
-                    <View style={styles.menuCard}>
-                        {MENU_ITEMS.map((item, index) => {
-                            const Icon = item.icon;
-                            const isLast = index === MENU_ITEMS.length - 1;
-                            const isLogout = item.label === 'Гарах';
+                    {/* ─── STATISTICS ─── */}
+                    <Animated.View entering={FadeInDown.delay(200).duration(600)} style={st.statsRow}>
+                        <View style={st.statCard}>
+                            <Text style={st.statNum}>{totalBookings}</Text>
+                            <Text style={st.statLabel}>Захиалга</Text>
+                        </View>
+                        <View style={st.statCard}>
+                            <Text style={st.statNum}>{completedBookings}</Text>
+                            <Text style={st.statLabel}>Дуусгасан</Text>
+                        </View>
+                        <View style={st.statCard}>
+                            <Text style={st.statNum}>{favCount}</Text>
+                            <Text style={st.statLabel}>Дуртай</Text>
+                        </View>
+                    </Animated.View>
 
-                            return (
-                                <TouchableOpacity
-                                    key={item.label}
-                                    style={[
-                                        styles.menuItem,
-                                        !isLast && styles.menuItemBorder,
-                                    ]}
-                                    activeOpacity={0.6}
-                                    onPress={() => handleMenuPress(item.route)}
+                    {/* ─── ADMIN LINK ─── */}
+                    {isAdmin && (
+                        <Animated.View entering={FadeInDown.delay(250).duration(600)} style={{ marginBottom: 16 }}>
+                            <Pressable onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                router.push('/admin' as any);
+                            }}>
+                                <LinearGradient
+                                    colors={[COLORS.gold, COLORS.deepGold]}
+                                    style={[st.adminBtn, SHADOWS.gold]}
                                 >
-                                    <Icon size={20} color={item.color} strokeWidth={1.8} />
-                                    <Text style={[
-                                        styles.menuLabel,
-                                        isLogout && styles.menuLabelLogout,
-                                    ]}>
+                                    <Text style={st.adminBtnText}>⚙️ Удирдлагын хэсэг →</Text>
+                                </LinearGradient>
+                            </Pressable>
+                        </Animated.View>
+                    )}
+
+                    {/* ─── MENU LIST ─── */}
+                    <Animated.View entering={FadeInDown.delay(300).duration(600)} style={st.menuCard}>
+                        {MENU_ITEMS.map((item, idx) => {
+                            const isLast = idx === MENU_ITEMS.length - 1;
+                            const isLogout = 'isLogout' in item && item.isLogout;
+                            return (
+                                <Pressable
+                                    key={item.label}
+                                    style={[st.menuItem, !isLast && st.menuBorder]}
+                                    onPress={() => handleMenuPress(item.route, isLogout)}
+                                >
+                                    <Text style={st.menuEmoji}>{item.emoji}</Text>
+                                    <Text style={[st.menuLabel, isLogout && { color: COLORS.error }]}>
                                         {item.label}
                                     </Text>
-                                    <ChevronRight size={18} color="#CCCCCC" strokeWidth={1.5} />
-                                </TouchableOpacity>
+                                    <ChevronRight size={16} color={isLogout ? COLORS.error : COLORS.textLight} />
+                                </Pressable>
                             );
                         })}
-                    </View>
+                    </Animated.View>
                 </ScrollView>
             </SafeAreaView>
         </View>
     );
 }
 
-const CARD_SHADOW = {
-    shadowColor: '#000' as const,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-};
+// ─── STYLES ───────────────────────────────────────────
+const st = StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.bg },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
+    scroll: { paddingHorizontal: 20, paddingBottom: 110 },
 
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#FFFDF4' },
-    flex: { flex: 1 },
-    scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
-    centerContent: { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
+    /* Guest */
+    guestTitle: { fontFamily: 'Georgia', fontSize: 24, fontWeight: '800', color: COLORS.text, marginBottom: 8 },
+    guestSub: { fontSize: 14, color: COLORS.textLight, textAlign: 'center', marginBottom: 28, lineHeight: 22 },
+    guestBtn: { borderRadius: 18, paddingVertical: 16, width: 280, alignItems: 'center' },
+    guestBtnText: { color: '#1A0800', fontWeight: '800', fontSize: 15, letterSpacing: 1.5 },
+    guestOutlineBtn: {
+        borderRadius: 18, borderWidth: 1.5, borderColor: COLORS.gold,
+        paddingVertical: 14, width: 280, alignItems: 'center', marginTop: 12,
+    },
+    guestOutlineBtnText: { color: COLORS.gold, fontWeight: '700', fontSize: 14, letterSpacing: 1.5 },
 
-    // Guest state
-    guestAvatar: {
-        width: 80, height: 80, borderRadius: 40,
-        backgroundColor: '#F0F0F0', alignItems: 'center',
-        justifyContent: 'center', marginBottom: 20,
+    /* Avatar */
+    avatarSection: { alignItems: 'center', paddingTop: 28, marginBottom: 24 },
+    avatarRing: {
+        width: 86, height: 86, borderRadius: 28, padding: 3,
+        alignItems: 'center', justifyContent: 'center', marginBottom: 16,
     },
-    guestAvatarText: { fontSize: 36 },
-    guestTitle: {
-        fontSize: 24, fontWeight: '700', color: '#333333', marginBottom: 8,
-    },
-    guestSubtitle: {
-        fontSize: 14, color: '#888888', textAlign: 'center',
-        marginBottom: 28, lineHeight: 22,
-    },
-    signInButton: {
-        backgroundColor: '#E5B22D', borderRadius: 20,
-        paddingVertical: 16, width: '100%',
-        alignItems: 'center', marginBottom: 12,
-    },
-    signInButtonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
-    signUpButton: {
-        backgroundColor: '#FFFFFF', borderRadius: 20,
-        paddingVertical: 16, width: '100%',
-        alignItems: 'center', borderWidth: 1.5, borderColor: '#E5B22D',
-    },
-    signUpButtonText: { color: '#E5B22D', fontWeight: '700', fontSize: 16 },
-
-    // Avatar section
-    avatarSection: { alignItems: 'center', paddingTop: 32, marginBottom: 28 },
-    avatarBorder: {
-        width: 104, height: 104, borderRadius: 52,
-        borderWidth: 3, borderColor: '#E5B22D',
-        padding: 3, marginBottom: 16,
-    },
-    avatarImage: { width: '100%', height: '100%', borderRadius: 48 },
+    avatarImage: { width: 80, height: 80, borderRadius: 25 },
     profileName: {
-        fontSize: 24, fontWeight: '700', color: '#333333', marginBottom: 4,
+        fontFamily: 'Georgia', fontSize: 22, fontWeight: '800', color: COLORS.text, marginBottom: 4,
     },
-    profileEmail: { fontSize: 14, color: '#888888', marginBottom: 16 },
-
+    profileEmail: { fontSize: 13, color: COLORS.textMid, marginBottom: 14 },
     premiumBadge: {
-        flexDirection: 'row', alignItems: 'center',
-        borderWidth: 1.5, borderColor: '#E5B22D',
-        borderRadius: 30, paddingHorizontal: 16, paddingVertical: 8, gap: 8,
+        backgroundColor: COLORS.goldPale, borderWidth: 1, borderColor: COLORS.gold,
+        borderRadius: 30, paddingHorizontal: 16, paddingVertical: 8,
     },
-    premiumText: { fontSize: 13, fontWeight: '600', color: '#E5B22D' },
+    premiumText: { fontSize: 13, fontWeight: '700', color: COLORS.gold },
 
-    // Stats
-    statsCard: {
-        flexDirection: 'row', backgroundColor: '#FFFFFF',
-        borderRadius: 20, padding: 20,
-        marginBottom: 20, alignItems: 'center',
-        ...CARD_SHADOW,
+    /* Stats */
+    statsRow: {
+        flexDirection: 'row', gap: 10, marginBottom: 16,
     },
-    statItem: { flex: 1, alignItems: 'center' },
-    statNumber: {
-        fontSize: 24, fontWeight: '800', color: '#E5B22D', marginBottom: 4,
+    statCard: {
+        flex: 1, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 18,
+        borderWidth: 1, borderColor: COLORS.border, paddingVertical: 18,
+        alignItems: 'center', ...SHADOWS.card,
     },
-    statLabel: { fontSize: 12, color: '#888888', fontWeight: '500' },
-    statDivider: { width: 1, height: 36, backgroundColor: '#F0F0F0' },
+    statNum: {
+        fontFamily: 'Georgia', fontSize: 24, fontWeight: '800', color: COLORS.gold, marginBottom: 4,
+    },
+    statLabel: { fontSize: 11, fontWeight: '600', color: COLORS.textMid },
 
-    // Menu
+    /* Admin */
+    adminBtn: { borderRadius: 18, paddingVertical: 16, alignItems: 'center' },
+    adminBtnText: { color: '#1A0800', fontWeight: '800', fontSize: 14, letterSpacing: 0.5 },
+
+    /* Menu */
     menuCard: {
-        backgroundColor: '#FFFFFF', borderRadius: 20,
-        overflow: 'hidden', ...CARD_SHADOW,
+        backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 22,
+        borderWidth: 1, borderColor: COLORS.border, overflow: 'hidden',
+        ...SHADOWS.card,
     },
     menuItem: {
-        flexDirection: 'row', alignItems: 'center',
-        paddingHorizontal: 20, paddingVertical: 18,
+        flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 16,
     },
-    menuItemBorder: { borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
-    menuLabel: {
-        flex: 1, fontSize: 15, fontWeight: '500',
-        color: '#333333', marginLeft: 16,
-    },
-    menuLabelLogout: { color: '#EF4444' },
+    menuBorder: { borderBottomWidth: 1, borderBottomColor: COLORS.border },
+    menuEmoji: { fontSize: 18, marginRight: 14 },
+    menuLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: COLORS.text },
 });

@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '../lib/useClerkSafe';
 import { useAuthStore } from '../store/authStore';
 
 /**

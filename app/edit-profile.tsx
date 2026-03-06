@@ -2,7 +2,7 @@ import { View, Text, TextInput, ScrollView, Pressable, ActivityIndicator } from 
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '../lib/useClerkSafe';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
 import { Calendar, Check } from 'lucide-react-native';

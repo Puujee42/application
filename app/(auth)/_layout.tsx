@@ -1,5 +1,5 @@
 import { Stack, useRouter } from 'expo-router';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '../../lib/useClerkSafe';
 import { useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { NavigationGuard } from '../../src/components/NavigationGuard';

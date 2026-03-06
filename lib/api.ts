@@ -11,8 +11,8 @@ const getBaseUrl = () => {
         return process.env.EXPO_PUBLIC_API_URL;
     }
 
-    // Connect to the local network IP where the Next.js server is running
-    return 'http://192.168.1.42:3000/api';
+    // Production fallback
+    return 'https://gevabal.mn/api';
 };
 
 export const API_URL = getBaseUrl();
@@ -21,7 +21,7 @@ console.log('API Base URL:', API_URL);
 
 const api = axios.create({
     baseURL: API_URL,
-    timeout: 10000,
+    timeout: 15000,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -53,11 +53,16 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (!error.response) {
-            console.error('Network Error:', error.message);
-            console.error('Attempted URL:', API_URL);
-            error.message = `Cannot connect to server at ${API_URL}. Make sure the server is running.`;
+            console.error('Сүлжээний алдаа:', error.message);
+            console.error('Хандсан URL:', API_URL);
+            error.message = `Серверт холбогдож чадсангүй (${API_URL}). Интернэт холболтоо шалгана уу.`;
         } else if (error.response.status === 401) {
-            console.error('Unauthorized - token may be invalid');
+            console.error('Зөвшөөрөлгүй хандалт — токен хүчингүй байж магадгүй');
+            error.message = 'Нэвтрэх хугацаа дууссан байна. Дахин нэвтэрнэ үү.';
+        } else if (error.response.status === 404) {
+            error.message = 'Хайсан мэдээлэл олдсонгүй.';
+        } else if (error.response.status >= 500) {
+            error.message = 'Серверийн алдаа гарлаа. Түр хүлээгээд дахин оролдоно уу.';
         }
         return Promise.reject(error);
     }

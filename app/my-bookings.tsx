@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '../lib/useClerkSafe';
 import { Calendar, Clock, ArrowLeft, CheckCircle2, XCircle, RotateCcw, MessageCircle, Video } from 'lucide-react-native';
 import api from '../lib/api';
 import { useTranslation } from 'react-i18next';
