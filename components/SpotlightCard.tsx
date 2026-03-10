@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, Platform } from 'react-native';
 import { LucideIcon } from 'lucide-react-native';
+import TouchableScale from './ui/TouchableScale';
 
 interface SpotlightCardProps {
     title: string;
@@ -13,7 +14,7 @@ interface SpotlightCardProps {
 
 export default function SpotlightCard({ title, desc, icon: Icon, onPress }: SpotlightCardProps) {
     return (
-        <Pressable
+        <TouchableScale
             onPress={onPress}
             className="bg-white/60 rounded-[32px] p-6 mb-4 border border-white/80 relative overflow-hidden active:bg-[#FDFBF7] shadow-lg backdrop-blur-2xl"
             style={Platform.select({
@@ -46,6 +47,6 @@ export default function SpotlightCard({ title, desc, icon: Icon, onPress }: Spot
             <Text className="text-[#544636] text-[15px] leading-relaxed">
                 {desc}
             </Text>
-        </Pressable>
+        </TouchableScale>
     );
 }

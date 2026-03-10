@@ -1,79 +1,77 @@
-import { View, Text, FlatList, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, RefreshControl, ActivityIndicator, Platform, Pressable, FlatList, TouchableOpacity, Animated as RNAnimated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '../lib/useClerkSafe';
-import { Calendar, Clock, ArrowLeft, CheckCircle2, XCircle, RotateCcw, MessageCircle, Video } from 'lucide-react-native';
+import { ArrowLeft, MessageCircle, Video } from 'lucide-react-native';
 import api from '../lib/api';
-import { useTranslation } from 'react-i18next';
 import { useUserStore } from '../store/userStore';
 import * as Haptics from 'expo-haptics';
 import { useIsAuthenticated } from '../hooks/useIsAuthenticated';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useNavigationState } from '@react-navigation/native';
-import { GlassContainer } from '../src/components/ui/GlassContainer';
+import { LinearGradient } from 'expo-linear-gradient';
+import TouchableScale from '../components/ui/TouchableScale';
+import { COLORS, SHADOWS, FONT } from '../design-system/theme';
 
 interface Booking {
     _id: string;
     monkId?: string;
     monkName?: string;
     clientName?: string;
+    userName?: string;
     date: string;
     time?: string;
     status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'rejected';
     serviceName?: any;
+    amount?: number;
+    price?: number;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-    pending: { label: 'Pending', color: '#D4AF37', icon: Clock },
-    confirmed: { label: 'Confirmed', color: '#10B981', icon: CheckCircle2 },
-    completed: { label: 'Completed', color: '#A89F91', icon: CheckCircle2 },
-    cancelled: { label: 'Cancelled', color: '#EF4444', icon: XCircle },
-    rejected: { label: 'Rejected', color: '#EF4444', icon: XCircle },
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+    pending: { label: 'Хүлээгдэж', color: '#92400E', bg: '#FEF3C7' },
+    confirmed: { label: 'Баталгаажсан', color: '#065F46', bg: '#D1FAE5' },
+    completed: { label: 'Дууссан', color: '#1E40AF', bg: '#DBEAFE' },
+    cancelled: { label: 'Цуцлагдсан', color: '#991B1B', bg: '#FEE2E2' },
+    rejected: { label: 'Татгалзсан', color: '#991B1B', bg: '#FEE2E2' },
 };
 
-export default function MyBookingsScreen() {
-    try {
-        useNavigationState(state => state);
-    } catch {
-        return (
-            <View className="flex-1 bg-[#FDFBF7] items-center justify-center">
-                <ActivityIndicator size="large" color="#D4AF37" />
-            </View>
-        );
-    }
+function SkeletonCard() {
+    const pulse = useRef(new RNAnimated.Value(0.35)).current;
 
-    return <MyBookingsContent />;
+    useEffect(() => {
+        RNAnimated.loop(
+            RNAnimated.sequence([
+                RNAnimated.timing(pulse, { toValue: 0.75, duration: 900, useNativeDriver: true }),
+                RNAnimated.timing(pulse, { toValue: 0.35, duration: 900, useNativeDriver: true })
+            ])
+        ).start();
+    }, [pulse]);
+
+    return (
+        <RNAnimated.View style={[st.card, { opacity: pulse, paddingVertical: 24 }]}>
+            <View style={{ width: '60%', height: 16, backgroundColor: COLORS.goldPale, borderRadius: 8, marginBottom: 12 }} />
+            <View style={{ width: '40%', height: 12, backgroundColor: COLORS.goldPale, borderRadius: 6, marginBottom: 16 }} />
+            <View style={{ width: '80%', height: 12, backgroundColor: COLORS.goldPale, borderRadius: 6 }} />
+        </RNAnimated.View>
+    );
 }
 
-function MyBookingsContent() {
+export default function MyBookingsScreen() {
     const router = useRouter();
-    const { isSignedIn } = useAuth();
     const isAuthenticated = useIsAuthenticated();
     const { user: dbUser } = useUserStore();
     const [refreshing, setRefreshing] = useState(false);
-    const { i18n } = useTranslation();
-    const lang = i18n.language === 'mn' ? 'mn' : 'en';
-
-    const t_db = (data: any) => {
-        if (!data) return '';
-        if (typeof data === 'string') return data;
-        return data[lang] || data.en || data.mn || '';
-    };
 
     const userId = dbUser?._id?.toString() || dbUser?.clerkId;
     const isMonk = dbUser?.role === 'monk';
 
-    const { data: bookings, isLoading, refetch } = useQuery({
+    const { data: bookings, isLoading, error, refetch } = useQuery({
         queryKey: ['bookings', userId, isMonk],
         queryFn: async () => {
             if (!userId) return [];
-            // Monks see bookings clients made WITH them; users see bookings they made
             const param = isMonk ? `monkId=${userId}` : `userId=${userId}`;
             const res = await api.get(`/bookings?${param}`);
             const data = Array.isArray(res.data) ? res.data : (res.data?.bookings || []);
-            // Sort newest first
             return data.sort((a: Booking, b: Booking) =>
                 new Date(b.date).getTime() - new Date(a.date).getTime()
             );
@@ -89,28 +87,20 @@ function MyBookingsContent() {
 
     const formatDate = (dateStr: string) => {
         const d = new Date(dateStr);
-        return d.toLocaleDateString(lang === 'mn' ? 'mn-MN' : 'en-US', {
-            weekday: 'short', month: 'short', day: 'numeric'
-        });
+        return `${d.getFullYear()} оны ${d.getMonth() + 1}-р сарын ${d.getDate()}`;
     };
 
     if (!isAuthenticated) {
         return (
-            <View className="flex-1 bg-[#FDFBF7]">
+            <View style={st.container}>
                 <Stack.Screen options={{ headerShown: false }} />
-                <SafeAreaView edges={['top']} className="flex-1 items-center justify-center px-6">
-                    <Text className="text-[#291E14] text-xl font-serif font-bold mb-4 tracking-tight">
-                        {lang === 'mn' ? 'Нэвтрэх шаардлагатай' : 'Sign in required'}
-                    </Text>
-                    <TouchableOpacity
-                        onPress={() => router.push('/(auth)/sign-in')}
-                        className="bg-[#D4AF37] rounded-full px-8 py-4 shadow-lg border border-[#D4AF37]"
-                        style={{ shadowColor: '#D4AF37', shadowRadius: 15, shadowOpacity: 0.2 }}
-                    >
-                        <Text className="text-[#FDFBF7] font-bold uppercase tracking-widest text-xs">
-                            {lang === 'mn' ? 'Нэвтрэх' : 'Sign In'}
-                        </Text>
-                    </TouchableOpacity>
+                <SafeAreaView edges={['top']} style={st.center}>
+                    <Text style={st.unauthText}>Нэвтрэх шаардлагатай</Text>
+                    <TouchableScale onPress={() => router.push('/(auth)/sign-in')} >
+                        <LinearGradient colors={[COLORS.goldBright, COLORS.gold, COLORS.amber]} style={[st.primaryBtn, SHADOWS.glow]}>
+                            <Text style={st.primaryBtnText}>НЭВТРЭХ</Text>
+                        </LinearGradient>
+                    </TouchableScale>
                 </SafeAreaView>
             </View>
         );
@@ -118,144 +108,197 @@ function MyBookingsContent() {
 
     const renderBooking = ({ item, index }: { item: Booking; index: number }) => {
         const config = STATUS_CONFIG[item.status] || STATUS_CONFIG.pending;
-        const StatusIcon = config.icon;
+        const displayName = isMonk ? (item.clientName || item.userName || 'Хэрэглэгч') : (item.monkName || 'Үзмэрч');
+        const serviceName = item.serviceName?.mn || item.serviceName?.en || item.serviceName || 'Үйлчилгээ';
 
         return (
-            <Animated.View entering={FadeInDown.delay(index * 80).duration(400)}>
-                <GlassContainer className="rounded-3xl p-5 mb-4 border border-white bg-white/60 shadow-sm backdrop-blur-xl" style={{ shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10 }}>
-                    <View className="flex-row items-center justify-between mb-3">
-                        <View className="flex-1 pr-2">
-                            <Text className="text-[#291E14] font-serif font-bold text-lg tracking-tight" numberOfLines={1}>
-                                {isMonk ? (item.clientName || 'Client') : (item.monkName || 'Booking')}
-                            </Text>
-                            {item.serviceName && (
-                                <Text className="text-[#544636] text-xs mt-0.5 tracking-wide font-medium" numberOfLines={1}>
-                                    {t_db(item.serviceName)}
-                                </Text>
-                            )}
+            <Animated.View entering={FadeInDown.delay(Math.min(index * 80, 320)).duration(400)}>
+                <View style={st.card}>
+                    <View style={st.cardHeader}>
+                        <View style={{ flex: 1 }}>
+                            <Text style={st.cardTitle} numberOfLines={1}>{displayName}</Text>
+                            <Text style={st.cardSub}>{serviceName}</Text>
                         </View>
-                        <View className="flex-row items-center px-3 py-1.5 rounded-full border" style={{ backgroundColor: `${config.color}10`, borderColor: `${config.color}30` }}>
-                            <StatusIcon size={12} color={config.color} />
-                            <Text className="ml-1.5 text-[10px] font-bold uppercase tracking-[2px]" style={{ color: config.color }}>
-                                {config.label}
-                            </Text>
+                        <View style={[st.statusBadge, { backgroundColor: config.bg }]}>
+                            <Text style={[st.statusText, { color: config.color }]}>{config.label}</Text>
                         </View>
                     </View>
 
-                    <View className="h-[1px] bg-[#E8E0D5]/50 w-full mb-3" />
+                    <View style={st.divider} />
 
-                    <View className="flex-row items-center gap-6">
-                        <View className="flex-row items-center">
-                            <View className="w-6 h-6 rounded-full bg-[#FFF9E6] border border-[#D4AF37]/20 items-center justify-center mr-2">
-                                <Calendar size={12} color="#D4AF37" />
-                            </View>
-                            <Text className="text-[#544636] text-xs font-bold tracking-wide">
-                                {formatDate(item.date)}
-                            </Text>
+                    <View style={st.cardBody}>
+                        <View style={{ flex: 1 }}>
+                            <Text style={st.dateText}>{formatDate(item.date)} {item.time ? `• ${item.time} цаг` : ''}</Text>
                         </View>
-                        {item.time && (
-                            <View className="flex-row items-center">
-                                <View className="w-6 h-6 rounded-full bg-[#FFF9E6] border border-[#D4AF37]/20 items-center justify-center mr-2">
-                                    <Clock size={12} color="#D4AF37" />
-                                </View>
-                                <Text className="text-[#544636] text-xs font-bold tracking-[1px]">
-                                    {item.time}
-                                </Text>
-                            </View>
-                        )}
+                        {(item.amount || item.price) ? (
+                            <Text style={st.priceText}>
+                                {((item.amount || item.price) as number).toLocaleString()}₮
+                            </Text>
+                        ) : null}
                     </View>
 
-                    {/* Chat & Call buttons for confirmed bookings */}
                     {item.status === 'confirmed' && (
-                        <View className="flex-row gap-3 mt-3 pt-3 border-t border-[#E8E0D5]/50">
-                            <TouchableOpacity
+                        <View style={st.actionRow}>
+                            <TouchableScale
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                     router.push(`/chat/${item._id}`);
                                 }}
-                                activeOpacity={0.9}
-                                className="flex-1 flex-row items-center justify-center gap-2 bg-[#FFF9E6] rounded-2xl py-3.5 border border-[#D4AF37]/20"
+
+                                style={st.chatBtn}
                             >
-                                <MessageCircle size={16} color="#D4AF37" />
-                                <Text className="text-xs font-bold text-[#D4AF37] uppercase tracking-widest">
-                                    {lang === 'mn' ? 'Чат' : 'Chat'}
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
+                                <MessageCircle size={16} color={COLORS.gold} />
+                                <Text style={st.chatBtnText}>ЧАТ</Text>
+                            </TouchableScale>
+
+                            <TouchableScale
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                                     router.push(`/live-session/${item._id}`);
                                 }}
-                                activeOpacity={0.9}
-                                className="flex-1 flex-row items-center justify-center gap-2 bg-[#D4AF37] rounded-2xl py-3.5 shadow-lg"
-                                style={{ shadowColor: '#D4AF37', shadowRadius: 10, shadowOpacity: 0.2 }}
+
+                                style={{ flex: 1 }}
                             >
-                                <Video size={16} color="#FDFBF7" />
-                                <Text className="text-xs font-bold text-[#FDFBF7] uppercase tracking-widest">
-                                    {lang === 'mn' ? 'Дуудлага' : 'Call'}
-                                </Text>
-                            </TouchableOpacity>
+                                <LinearGradient colors={[COLORS.goldBright, COLORS.gold, COLORS.amber]} style={[st.callBtn, SHADOWS.glow]}>
+                                    <View style={st.btnShine} />
+                                    <Video size={16} color="#1C0E00" />
+                                    <Text style={st.callBtnText}>ДУУДЛАГА</Text>
+                                </LinearGradient>
+                            </TouchableScale>
                         </View>
                     )}
-                </GlassContainer>
+                </View>
             </Animated.View>
         );
     };
 
     return (
-        <View className="flex-1 bg-[#FDFBF7]">
+        <View style={st.container}>
             <Stack.Screen options={{ headerShown: false }} />
 
-            {/* Premium Header */}
-            <SafeAreaView edges={['top']} className="bg-[#FDFBF7] z-10 pb-4 shadow-sm" style={{ shadowColor: '#D4AF37', shadowOpacity: 0.05, shadowRadius: 10 }}>
-                <View className="px-6 py-4 flex-row items-center border-b border-[#E8E0D5]/50">
-                    <TouchableOpacity
+            <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+                <View style={st.header}>
+                    <TouchableScale
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                             router.back();
                         }}
-                        className="w-10 h-10 bg-white/80 rounded-full items-center justify-center border border-[#E8E0D5] shadow-sm backdrop-blur-3xl"
-                    >
-                        <ArrowLeft size={20} color="#291E14" />
-                    </TouchableOpacity>
-                    <Text className="text-2xl font-serif font-bold text-[#291E14] ml-5 tracking-tight flex-1">
-                        {lang === 'mn' ? 'Миний захиалгууд' : 'My Bookings'}
-                    </Text>
-                </View>
-            </SafeAreaView>
+                        style={st.backBtn}
 
-            {isLoading ? (
-                <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator size="large" color="#D4AF37" />
+                    >
+                        <ArrowLeft size={22} color={COLORS.text} />
+                    </TouchableScale>
+                    <Text style={st.headerTitle}>
+                        {isMonk ? 'Миний уулзалтууд' : 'Миний захиалгууд'}
+                    </Text>
+                    <View style={{ width: 38 }} />
                 </View>
-            ) : !bookings || bookings.length === 0 ? (
-                <View className="flex-1 items-center justify-center px-6">
-                    <View className="w-24 h-24 rounded-full bg-[#FFF9E6] border border-[#D4AF37]/20 items-center justify-center mb-6 shadow-sm">
-                        <RotateCcw size={40} color="#D4AF37" opacity={0.5} />
+
+                {error && (
+                    <View style={st.errorBlock}>
+                        <Text style={st.errorText}>⚠️ Мэдээлэл ачаалж чадсангүй</Text>
+                        <TouchableScale onPress={() => refetch()} >
+                            <Text style={st.errorAction}>Дахин оролдох</Text>
+                        </TouchableScale>
                     </View>
-                    <Text className="text-[#544636] text-center font-serif text-lg tracking-wide">
-                        {lang === 'mn' ? 'Захиалга байхгүй' : 'The path is empty'}
-                    </Text>
-                    <Text className="text-[#A89F91] text-center mt-2 text-sm max-w-[200px]">
-                        {lang === 'mn' ? 'Одоогоор ямар нэгэн захиалга алга байна.' : 'You have no confirmed spiritual sessions yet.'}
-                    </Text>
-                </View>
-            ) : (
-                <FlatList
-                    data={bookings}
-                    keyExtractor={(item) => item._id}
-                    renderItem={renderBooking}
-                    contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 100 }}
-                    showsVerticalScrollIndicator={false}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            tintColor="#D4AF37"
-                        />
-                    }
-                />
-            )}
+                )}
+
+                {isLoading ? (
+                    <View style={{ padding: 20 }}>
+                        <SkeletonCard />
+                        <SkeletonCard />
+                        <SkeletonCard />
+                    </View>
+                ) : !bookings || bookings.length === 0 ? (
+                    <View style={st.emptyState}>
+                        <Text style={st.emptyEmoji}>📅</Text>
+                        <Text style={st.emptyTitle}>Идэвхтэй уулзалт алга</Text>
+                        <Text style={st.emptySub}>Шинэ захиалга үүсгэх эсвэл дараа шалгана уу</Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={bookings}
+                        keyExtractor={(item) => item._id}
+                        renderItem={renderBooking}
+                        contentContainerStyle={st.listContent}
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={
+                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} />
+                        }
+                    />
+                )}
+            </SafeAreaView>
         </View>
     );
 }
+
+const st = StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.bg },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    header: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: 20, paddingVertical: 12,
+        borderBottomWidth: 1, borderBottomColor: COLORS.divider,
+        backgroundColor: COLORS.bg,
+    },
+    backBtn: {
+        width: 38, height: 38, borderRadius: 12,
+        backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border,
+        alignItems: 'center', justifyContent: 'center',
+        ...SHADOWS.sm,
+    },
+    headerTitle: { fontFamily: FONT.display, fontSize: 22, fontWeight: '700', color: COLORS.text },
+
+    unauthText: { fontFamily: FONT.display, fontSize: 18, fontWeight: '700', color: COLORS.text, marginBottom: 20 },
+    primaryBtn: { borderRadius: 16, paddingVertical: 15, paddingHorizontal: 32, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.22)' },
+    primaryBtnText: { color: '#1C0E00', fontWeight: '800', fontSize: 15, letterSpacing: 0.5, fontFamily: FONT.display },
+
+    listContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: Platform.OS === 'ios' ? 116 : 96 },
+
+    card: {
+        backgroundColor: COLORS.surface, borderRadius: 20,
+        borderWidth: 1, borderColor: COLORS.border, padding: 18, marginBottom: 14, overflow: 'hidden',
+        ...SHADOWS.md, elevation: 4,
+    },
+    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+    cardTitle: { fontFamily: FONT.display, fontSize: 16, fontWeight: '700', color: COLORS.text, marginBottom: 2 },
+    cardSub: { fontSize: 13, color: COLORS.textSub },
+    statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, flexDirection: 'row', alignItems: 'center', gap: 4 },
+    statusText: { fontSize: 11, fontWeight: '700' },
+
+    divider: { height: 1, backgroundColor: COLORS.divider, marginVertical: 14 },
+
+    cardBody: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    dateText: { fontSize: 13, color: COLORS.textMute },
+    priceText: { fontFamily: FONT.display, fontSize: 15, fontWeight: '800', color: COLORS.gold },
+
+    actionRow: { flexDirection: 'row', gap: 10, marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: COLORS.divider },
+    chatBtn: {
+        flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+        backgroundColor: COLORS.surface, borderRadius: 16, paddingVertical: 14,
+        borderWidth: 1.5, borderColor: COLORS.gold,
+    },
+    chatBtnText: { color: COLORS.gold, fontSize: 13, fontWeight: '700' },
+    callBtn: {
+        flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+        borderRadius: 16, paddingVertical: 14, minWidth: 120,
+    },
+    btnShine: {
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 16,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.22)'
+    },
+    callBtnText: { color: '#1C0E00', fontSize: 13, fontWeight: '800', fontFamily: FONT.display, letterSpacing: 0.5 },
+
+    emptyState: { paddingVertical: 72, alignItems: 'center' },
+    emptyEmoji: { fontSize: 56, marginBottom: 18 },
+    emptyTitle: { fontFamily: FONT.display, fontSize: 17, fontWeight: '600', color: COLORS.textSub },
+    emptySub: { fontSize: 13, color: COLORS.textMute, textAlign: 'center', marginTop: 6, lineHeight: 20 },
+
+    errorBlock: {
+        backgroundColor: 'rgba(220,38,38,0.06)', borderRadius: 16,
+        borderWidth: 1, borderColor: 'rgba(220,38,38,0.15)',
+        padding: 16, margin: 16, alignItems: 'center'
+    },
+    errorText: { color: '#DC2626', fontSize: 14, fontWeight: '600', marginBottom: 8 },
+    errorAction: { color: COLORS.gold, fontWeight: '700' },
+});

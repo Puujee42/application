@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 import { getChatMessages, sendChatMessage, ChatMessage } from '../../lib/api';
 import { useUserStore } from '../../store/userStore';
 import { useAuthStore } from '../../store/authStore';
+import TouchableScale from '../../components/ui/TouchableScale';
 
 export default function ChatScreen() {
     const { id: bookingId } = useLocalSearchParams<{ id: string }>();
@@ -92,7 +93,7 @@ export default function ChatScreen() {
 
             {/* Header */}
             <View className="px-4 py-3 flex-row items-center border-b border-stone-100 bg-white">
-                <Pressable
+                <TouchableScale
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         router.back();
@@ -100,7 +101,7 @@ export default function ChatScreen() {
                     className="p-2 rounded-full active:bg-stone-100 mr-2"
                 >
                     <ArrowLeft size={22} color="#0F172A" />
-                </Pressable>
+                </TouchableScale>
                 <View className="flex-1">
                     <Text className="text-lg font-serif font-bold text-monk-primary">Chat</Text>
                     <Text className="text-xs text-monk-secondary">Booking messages</Text>
@@ -148,7 +149,7 @@ export default function ChatScreen() {
                             onSubmitEditing={handleSend}
                             blurOnSubmit={false}
                         />
-                        <Pressable
+                        <TouchableScale
                             onPress={handleSend}
                             disabled={!text.trim() || sendMutation.isPending}
                             className={`w-11 h-11 rounded-full items-center justify-center ${text.trim() ? 'bg-monk-primary active:bg-amber-700' : 'bg-stone-200'
@@ -159,7 +160,7 @@ export default function ChatScreen() {
                             ) : (
                                 <Send size={18} color={text.trim() ? 'white' : '#9CA3AF'} />
                             )}
-                        </Pressable>
+                        </TouchableScale>
                     </View>
                 </View>
             </KeyboardAvoidingView>

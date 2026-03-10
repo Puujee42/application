@@ -1,12 +1,17 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { COLORS, SHADOWS, FONT } from '../../../design-system/theme';
 
-export interface ButtonProps extends React.ComponentProps<typeof TouchableOpacity> {
+export interface ButtonProps extends Omit<React.ComponentProps<typeof Pressable>, 'style'> {
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
     size?: 'sm' | 'md' | 'lg';
     label: string;
     icon?: React.ReactNode;
+    className?: string;
+    style?: import('react-native').StyleProp<import('react-native').ViewStyle>;
 }
 
 export const Button = ({
@@ -15,71 +20,168 @@ export const Button = ({
     label,
     icon,
     className,
+    style,
     onPress,
+    onPressIn,
+    onPressOut,
     ...props
 }: ButtonProps) => {
 
+    const scale = useSharedValue(1);
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ scale: scale.value }]
+        };
+    });
+
+    const handlePressIn = (e: any) => {
+        scale.value = withSpring(0.97, {
+            damping: 30,
+            stiffness: 400,
+        });
+        onPressIn?.(e);
+    };
+
+    const handlePressOut = (e: any) => {
+        scale.value = withSpring(1.0, {
+            damping: 30,
+            stiffness: 400,
+        });
+        onPressOut?.(e);
+    };
+
     const handlePress = (e: any) => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (variant === 'primary') {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        } else {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
         onPress?.(e);
-    };
-
-    const sizes = {
-        sm: 'px-4 py-2',
-        md: 'px-6 py-4',
-        lg: 'px-10 py-5',
-    };
-
-    const textBase = 'font-bold tracking-widest uppercase text-xs';
-    const textStyles = {
-        primary: `${textBase} text-[#1A1000]`,
-        secondary: `${textBase} text-[#1A1000]`,
-        outline: `${textBase} text-[#D4A020]`,
-        ghost: 'font-semibold text-sm text-[#D4A020]',
     };
 
     if (variant === 'primary') {
         return (
-            <TouchableOpacity
-                onPress={handlePress}
-                activeOpacity={0.85}
-                {...props}
-            >
-                <LinearGradient
-                    colors={['#D4A020', '#B8820A']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    className={`flex-row items-center justify-center rounded-full ${sizes[size]} ${className || ''}`}
-                    style={{
-                        shadowColor: '#FFD060',
-                        shadowOffset: { width: 0, height: 6 },
-                        shadowOpacity: 0.4,
-                        shadowRadius: 12,
-                        elevation: 8,
-                    }}
+            <Animated.View style={[animatedStyle, style]}>
+                <Pressable
+                    onPressIn={handlePressIn}
+                    onPressOut={handlePressOut}
+                    onPress={handlePress}
+                    style={styles.primaryBtnWrapper}
+                    {...props}
                 >
-                    {icon && <View className="mr-2">{icon}</View>}
-                    <Text className={textStyles.primary}>{label}</Text>
-                </LinearGradient>
-            </TouchableOpacity>
+                    {({ pressed }) => (
+                        <View style={{ opacity: pressed ? 0.80 : 1 }}>
+                            <LinearGradient
+                                colors={[COLORS.goldBright, COLORS.gold, COLORS.amber]}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={[styles.primaryGradient, SHADOWS.glow]}
+                            >
+                                {icon && <View style={styles.iconContainer}>{icon}</View>}
+                                <Text style={styles.primaryText}>{label}</Text>
+                            </LinearGradient>
+                        </View>
+                    )}
+                </Pressable>
+            </Animated.View>
         );
     }
 
-    const variants = {
-        secondary: 'bg-[#FFFBF0]/60 border border-[rgba(200,146,10,0.18)]',
-        outline: 'border border-[#D4A020] bg-transparent',
-        ghost: 'border-transparent bg-transparent',
-    };
+    if (variant === 'outline') {
+        return (
+            <Animated.View style={[animatedStyle, style]}>
+                <Pressable
+                    onPressIn={handlePressIn}
+                    onPressOut={handlePressOut}
+                    onPress={handlePress}
+                    style={({ pressed }) => [
+                        styles.outlineBtn,
+                        { opacity: pressed ? 0.80 : 1 }
+                    ]}
+                    {...props}
+                >
+                    {icon && <View style={styles.iconContainer}>{icon}</View>}
+                    <Text style={styles.outlineText}>{label}</Text>
+                </Pressable>
+            </Animated.View>
+        );
+    }
 
+    // Default catch for secondary/ghost
     return (
-        <TouchableOpacity
-            className={`flex-row items-center justify-center rounded-full ${variants[variant]} ${sizes[size]} ${className || ''}`}
-            onPress={handlePress}
-            activeOpacity={0.8}
-            {...props}
-        >
-            {icon && <View className="mr-2">{icon}</View>}
-            <Text className={textStyles[variant]}>{label}</Text>
-        </TouchableOpacity>
+        <Animated.View style={[animatedStyle, style]}>
+            <Pressable
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+                onPress={handlePress}
+                style={({ pressed }) => [
+                    styles.secondaryBtn,
+                    { opacity: pressed ? 0.80 : 1 }
+                ]}
+                {...props}
+            >
+                {icon && <View style={styles.iconContainer}>{icon}</View>}
+                <Text style={styles.secondaryText}>{label}</Text>
+            </Pressable>
+        </Animated.View>
     );
 };
+
+const styles = StyleSheet.create({
+    primaryBtnWrapper: {
+        // Wrapper for shadow if necessary
+    },
+    primaryGradient: {
+        borderRadius: 16,
+        paddingVertical: 15,
+        paddingHorizontal: 24,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.22)',
+    },
+    primaryText: {
+        color: '#1C0E00',
+        fontFamily: FONT.display,
+        fontWeight: '800',
+        fontSize: 15,
+        letterSpacing: 0.5,
+    },
+    outlineBtn: {
+        borderWidth: 1.5,
+        borderColor: COLORS.gold,
+        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        backgroundColor: 'rgba(255,252,242,0.8)',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    outlineText: {
+        color: COLORS.gold,
+        fontWeight: '700',
+        fontSize: 14,
+    },
+    secondaryBtn: {
+        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        backgroundColor: COLORS.surface,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    secondaryText: {
+        color: COLORS.textSub,
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    iconContainer: {
+        marginRight: 8,
+    }
+});

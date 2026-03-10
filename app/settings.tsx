@@ -7,6 +7,7 @@ import { Globe, Bell, Info, ChevronRight, ArrowLeft } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics';
 import Constants from 'expo-constants';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import TouchableScale from '../components/ui/TouchableScale';
 
 export default function SettingsScreen() {
     const { i18n } = useTranslation();
@@ -50,7 +51,7 @@ export default function SettingsScreen() {
             {/* Premium Header */}
             <SafeAreaView edges={['top']} className="bg-[#FDFBF7] z-10 pb-4 shadow-sm" style={{ shadowColor: '#D4AF37', shadowOpacity: 0.05, shadowRadius: 10 }}>
                 <View className="px-6 py-4 flex-row items-center border-b border-[#E8E0D5]/50">
-                    <TouchableOpacity
+                    <TouchableScale
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                             router.back();
@@ -58,7 +59,7 @@ export default function SettingsScreen() {
                         className="w-10 h-10 bg-white/80 rounded-full items-center justify-center border border-[#E8E0D5] shadow-sm"
                     >
                         <ArrowLeft size={20} color="#291E14" />
-                    </TouchableOpacity>
+                    </TouchableScale>
                     <Text className="text-2xl font-serif font-bold text-[#291E14] ml-5 tracking-tight flex-1">
                         Settings
                     </Text>
@@ -72,7 +73,7 @@ export default function SettingsScreen() {
 
                     <View className="bg-white/60 rounded-[24px] overflow-hidden border border-white/80 shadow-lg backdrop-blur-xl" style={{ shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3 }}>
                         {languages.map((lang, index) => (
-                            <Pressable
+                            <TouchableScale
                                 key={lang.code}
                                 onPress={() => handleLanguageChange(lang.code)}
                                 className={`flex-row items-center justify-between px-6 py-5 ${index < languages.length - 1 ? 'border-b border-[#E8E0D5]/50' : ''
@@ -82,7 +83,7 @@ export default function SettingsScreen() {
                                 {currentLanguage === lang.code && (
                                     <Animated.View entering={FadeInRight.duration(300)} className="w-3 h-3 bg-[#D4AF37] rounded-full shadow-sm" style={{ shadowColor: '#D4AF37', shadowRadius: 6, shadowOpacity: 0.5 }} />
                                 )}
-                            </Pressable>
+                            </TouchableScale>
                         ))}
                     </View>
                 </Animated.View>
@@ -125,26 +126,26 @@ export default function SettingsScreen() {
                             </Text>
                         </View>
 
-                        <Pressable
+                        <TouchableScale
                             className="flex-row items-center justify-between px-6 py-5 border-b border-[#E8E0D5]/50 active:bg-[#FDFBF7]/80"
                         >
                             <Text className="text-[#544636] font-medium tracking-wide">Sacred Vows (Terms)</Text>
                             <ChevronRight size={18} color="#A89F91" />
-                        </Pressable>
+                        </TouchableScale>
 
-                        <Pressable
+                        <TouchableScale
                             className="flex-row items-center justify-between px-6 py-5 border-b border-[#E8E0D5]/50 active:bg-[#FDFBF7]/80"
                         >
                             <Text className="text-[#544636] font-medium tracking-wide">Veil of Silence (Privacy)</Text>
                             <ChevronRight size={18} color="#A89F91" />
-                        </Pressable>
+                        </TouchableScale>
 
-                        <Pressable
+                        <TouchableScale
                             className="flex-row items-center justify-between px-6 py-5 active:bg-[#FDFBF7]/80"
                         >
                             <Text className="text-[#544636] font-medium tracking-wide">Seek Counsel (Support)</Text>
                             <ChevronRight size={18} color="#A89F91" />
-                        </Pressable>
+                        </TouchableScale>
                     </View>
                 </Animated.View>
             </ScrollView>

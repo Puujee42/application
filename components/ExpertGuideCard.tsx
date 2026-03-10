@@ -1,5 +1,6 @@
 import { View, Text, Pressable } from 'react-native';
 import { Image } from 'expo-image';
+import TouchableScale from './ui/TouchableScale';
 
 interface ExpertGuideCardProps {
     imageUrl: string;
@@ -17,7 +18,7 @@ export default function ExpertGuideCard({
     onPress,
 }: ExpertGuideCardProps) {
     return (
-        <Pressable
+        <TouchableScale
             onPress={onPress}
             className="items-center mr-4 active:opacity-70"
             style={{ width: 100 }}
@@ -67,6 +68,6 @@ export default function ExpertGuideCard({
             >
                 {specialty}
             </Text>
-        </Pressable>
+        </TouchableScale>
     );
 }

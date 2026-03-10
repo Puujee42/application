@@ -1,7 +1,7 @@
 import React, { useEffect, Component } from 'react';
 import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -12,13 +12,15 @@ import { initI18n } from '../lib/i18n';
 import OfflineBanner from '../components/OfflineBanner';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { ClerkAvailableContext } from '../lib/useClerkSafe';
+import { useAuthStore } from '../store/authStore';
+import api from '../lib/api';
+import { COLORS } from '../design-system/theme';
 import '../global.css';
-import { AuthSync } from '../src/components/AuthSync';
+import { useBookingNotifications } from '../hooks/useBookingNotifications';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 const isClerkReady = publishableKey.startsWith('pk_') && !publishableKey.includes('YOUR_KEY_HERE');
 
-// ── Catches Clerk init errors (invalid key, network) → falls back to no-auth ──
 class ClerkErrorBoundary extends Component<
     { children: React.ReactNode; fallback: React.ReactNode },
     { hasError: boolean }
@@ -35,11 +37,34 @@ class ClerkErrorBoundary extends Component<
 
 function AppContent({ withAuth }: { withAuth: boolean }) {
     const colorScheme = useColorScheme();
+    const router = useRouter();
+
+    // Hook will automatically sync local notifications based on logged in user's bookings
+    useBookingNotifications();
+
+    useEffect(() => {
+        // Setup 401 interceptor
+        const interceptor = api.interceptors.response.use(
+            (res) => res,
+            async (error) => {
+                if (error.response?.status === 401) {
+                    const { logout } = useAuthStore.getState();
+                    await logout();
+                    router.replace('/(auth)/sign-in');
+                }
+                return Promise.reject(error);
+            }
+        );
+
+        return () => {
+            api.interceptors.response.eject(interceptor);
+        };
+    }, [router]);
+
     return (
         <SafeAreaProvider>
             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                {withAuth && <AuthSync />}
-                <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                <StatusBar style="dark" backgroundColor={COLORS.bg} />
                 <OfflineBanner />
                 <Stack
                     screenOptions={{

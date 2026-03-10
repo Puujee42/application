@@ -11,6 +11,7 @@ import { ArrowLeft, Check, X } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useUserStore } from '../../store/userStore';
 import api from '../../lib/api';
 import { COLORS, SHADOWS } from '../../design-system/theme';
 
@@ -23,17 +24,19 @@ const t = (data: any) => {
 export default function AdminApplications() {
     const router = useRouter();
     const queryClient = useQueryClient();
+    const { user: dbUser } = useUserStore();
     const [refreshing, setRefreshing] = useState(false);
     const [processingId, setProcessingId] = useState<string | null>(null);
 
-    const { data: applications, isLoading, refetch } = useQuery({
-        queryKey: ['admin-applications'],
+    const { data: applications, isLoading, error, refetch } = useQuery({
+        queryKey: ['admin-applications', dbUser?._id],
         queryFn: async () => {
-            const res = await api.get('/admin/data');
+            const res = await api.get(`/admin/data?userId=${dbUser?._id}`);
             const users = res.data?.users || [];
             // Filter to pending monk applications
-            return users.filter((u: any) => u.monkStatus === 'pending') as any[];
+            return users.filter((u: any) => u.monkStatus === 'pending');
         },
+        enabled: !!dbUser?._id,
     });
 
     const onRefresh = useCallback(async () => {
@@ -43,7 +46,7 @@ export default function AdminApplications() {
     const actionMutation = useMutation({
         mutationFn: async ({ id, action }: { id: string; action: 'approve' | 'reject' }) => {
             setProcessingId(id);
-            const res = await api.patch(`/admin/applications/${id}`, { action });
+            const res = await api.patch(`/admin/applications/${id}?userId=${dbUser?._id}`, { action });
             return res.data;
         },
         onSuccess: () => {

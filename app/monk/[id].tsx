@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Star, Calendar, Sparkles, Navigation } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { useAnimatedScrollHandler, useSharedValue, useAnimatedStyle, interpolate, FadeInDown, FadeInUp } from 'react-native-reanimated';
+import TouchableScale from '../../components/ui/TouchableScale';
 
 export default function MonkDetailScreen() {
     const { id } = useLocalSearchParams();
@@ -127,7 +128,7 @@ export default function MonkDetailScreen() {
                 </Animated.View>
 
                 {/* Floating Back Button (Frosted effect) */}
-                <TouchableOpacity
+                <TouchableScale
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         router.back();
@@ -137,7 +138,7 @@ export default function MonkDetailScreen() {
                     <GlassContainer className="w-12 h-12 p-0 rounded-full bg-white/60 border border-[#E8E0D5] shadow-sm">
                         <ArrowLeft size={24} color="#291E14" />
                     </GlassContainer>
-                </TouchableOpacity>
+                </TouchableScale>
 
                 {/* Scrollable Content */}
                 <Animated.ScrollView
@@ -218,12 +219,11 @@ export default function MonkDetailScreen() {
                     entering={FadeInUp.delay(800).duration(1000).springify()}
                     style={{ position: 'absolute', bottom: 40, left: 24, right: 24, zIndex: 50 }}
                 >
-                    <TouchableOpacity
+                    <TouchableScale
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                             router.push(`/booking/${monk._id}`);
                         }}
-                        activeOpacity={0.9}
                     >
                         <GlassContainer className="flex-row items-center justify-between bg-white/60 p-2 pl-8 rounded-full border border-white backdrop-blur-3xl shadow-2xl" style={{ shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 30 }}>
                             <Text className="text-[#291E14] font-bold text-[13px] uppercase tracking-[4px]">
@@ -233,7 +233,7 @@ export default function MonkDetailScreen() {
                                 <Navigation size={22} color="#FDFBF7" style={{ transform: [{ rotate: '45deg' }], marginLeft: -2, marginTop: 2 }} />
                             </View>
                         </GlassContainer>
-                    </TouchableOpacity>
+                    </TouchableScale>
                 </Animated.View>
 
             </View>

@@ -27,20 +27,24 @@ const api = axios.create({
     },
 });
 
+import { useAuthStore } from '../store/authStore';
+
 // Request interceptor to add auth token (supports both Clerk and custom JWT)
 api.interceptors.request.use(async (config) => {
     try {
-        // Try Clerk token first
+        const state = useAuthStore.getState();
+
+        // If user is logged in via Custom Auth, use that token
+        if (state.isCustomAuth && state.customToken) {
+            config.headers.Authorization = `Bearer ${state.customToken}`;
+            return config;
+        }
+
+        // Try Clerk token
         const clerkToken = await SecureStore.getItemAsync('clerk-db-jwt');
         if (clerkToken) {
             config.headers.Authorization = `Bearer ${clerkToken}`;
             return config;
-        }
-
-        // Fall back to custom auth token
-        const customToken = await SecureStore.getItemAsync('custom-auth-jwt');
-        if (customToken) {
-            config.headers.Authorization = `Bearer ${customToken}`;
         }
     } catch (error) {
         console.error('Error getting token', error);
@@ -228,8 +232,10 @@ export const createBlog = async (data: {
     contentEn: string;
     date?: string;
     imageUrl?: string;
+    userId?: string;
 }): Promise<{ success: boolean; id: string }> => {
-    const response = await api.post('/admin/content', { ...data, type: 'blog' });
+    const { userId, ...rest } = data;
+    const response = await api.post(`/admin/content${userId ? `?userId=${userId}` : ''}`, { ...rest, type: 'blog' });
     return response.data;
 };
 
@@ -241,14 +247,16 @@ export const updateBlog = async (id: string, data: {
     contentEn?: string;
     date?: string;
     imageUrl?: string;
+    userId?: string;
 }): Promise<{ success: boolean }> => {
-    const response = await api.put('/admin/content', { ...data, id, type: 'blog' });
+    const { userId, ...rest } = data;
+    const response = await api.put(`/admin/content${userId ? `?userId=${userId}` : ''}`, { ...rest, id, type: 'blog' });
     return response.data;
 };
 
 // DELETE /api/admin/content — Delete blog (same as parent ContentManager)
-export const deleteBlog = async (id: string): Promise<{ success: boolean }> => {
-    const response = await api.delete('/admin/content', { data: { id, type: 'blog' } });
+export const deleteBlog = async (id: string, userId?: string): Promise<{ success: boolean }> => {
+    const response = await api.delete(`/admin/content${userId ? `?userId=${userId}` : ''}`, { data: { id, type: 'blog' } });
     return response.data;
 };
 

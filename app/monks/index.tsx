@@ -48,7 +48,7 @@ export default function MonkListScreen() {
                     {monks?.map((monk) => (
                         <TouchableOpacity
                             key={monk._id?.toString() || monk.name.en}
-                            activeOpacity={0.9}
+                            
                             onPress={() => router.push(`/monk/${monk._id}`)}
                             className="mb-6"
                         >

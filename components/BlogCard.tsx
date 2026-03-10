@@ -3,6 +3,7 @@ import { View, Text, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { ArrowRight, Calendar, Sparkles } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import TouchableScale from './ui/TouchableScale';
 
 // Helper type matching API response
 interface BlogPost {
@@ -29,7 +30,7 @@ export default function BlogCard({ post, lang }: BlogCardProps) {
     const previewContent = content.length > 100 ? content.substring(0, 100) + '...' : content;
 
     return (
-        <Pressable
+        <TouchableScale
             onPress={() => router.push(`/blog/${post.id}`)}
             className="bg-stone-800/60 rounded-[2.5rem] border border-white/5 p-6 mb-6 overflow-hidden active:bg-stone-800"
         >
@@ -79,6 +80,6 @@ export default function BlogCard({ post, lang }: BlogCardProps) {
                     <ArrowRight size={14} color="white" />
                 </View>
             </View>
-        </Pressable>
+        </TouchableScale>
     );
 }

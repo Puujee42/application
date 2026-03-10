@@ -1,24 +1,24 @@
-import React from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import {
-    ScrollView,
-    View,
-    Text,
-    TouchableOpacity,
-    StyleSheet,
-    Dimensions,
-    RefreshControl,
+    ScrollView, View, Text, Pressable,
+    StyleSheet, Dimensions, RefreshControl, Platform, Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { useQuery } from '@tanstack/react-query';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getMonks } from '../../lib/api';
+import { Bell, Star } from 'lucide-react-native';
 import { useUser } from '../../lib/useClerkSafe';
 import { useUserStore } from '../../store/userStore';
 import { useAuthStore } from '../../store/authStore';
 import { useIsAuthenticated } from '../../hooks/useIsAuthenticated';
 import { Monk } from '../../src/types/schema';
-import { useCallback, useState } from 'react';
+import { COLORS, SHADOWS, FONT } from '../../design-system/theme';
+import * as Haptics from 'expo-haptics';
+import Reanimated, { FadeInDown } from 'react-native-reanimated';
+import TouchableScale from '../../components/ui/TouchableScale';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -41,6 +41,8 @@ const formatPrice = (monk: Monk): string => {
     return monk.isSpecial ? '88,000₮' : '50,000₮';
 };
 
+const ReanimatedPressable = Reanimated.createAnimatedComponent(Pressable);
+
 export default function HomeScreen() {
     const router = useRouter();
     const { user: clerkUser } = useUser();
@@ -49,7 +51,7 @@ export default function HomeScreen() {
     const isAuthenticated = useIsAuthenticated();
     const [refreshing, setRefreshing] = useState(false);
 
-    const { data: monks, refetch } = useQuery({
+    const { data: monks, refetch, isLoading } = useQuery({
         queryKey: ['monks'],
         queryFn: getMonks,
     });
@@ -62,6 +64,7 @@ export default function HomeScreen() {
 
     const displayName = dbUser?.firstName || customUser?.firstName || clerkUser?.firstName || 'Зочин';
     const avatarUri = (dbUser as any)?.image || dbUser?.avatar || clerkUser?.imageUrl || 'https://i.pravatar.cc/150?u=self';
+
     const topMonks = monks?.slice(0, 5) || [];
 
     return (
@@ -71,114 +74,218 @@ export default function HomeScreen() {
                     style={styles.flex}
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
+                    showsHorizontalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            tintColor="#E5B22D"
-                            colors={['#E5B22D']}
+                            tintColor={COLORS.gold}
+                            colors={[COLORS.gold]}
                         />
                     }
                 >
                     {/* ===== HEADER ===== */}
-                    <View style={styles.header}>
+                    <Reanimated.View entering={FadeInDown.delay(0).duration(500)} style={styles.header}>
                         <View style={styles.headerLeft}>
                             <Text style={styles.greeting}>Сайн байна уу 👋</Text>
                             <Text style={styles.username}>{displayName}</Text>
                         </View>
-                        <TouchableOpacity
-                            style={styles.avatarCircle}
-                            activeOpacity={0.8}
-                            onPress={() => router.push('/(tabs)/profile')}
-                        >
-                            <Image
-                                source={{ uri: avatarUri }}
-                                style={styles.avatarImage}
-                                contentFit="cover"
-                            />
-                        </TouchableOpacity>
-                    </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                            <Pressable
+                                style={styles.bellContainer}
 
-                    {/* ===== HERO CARD ===== */}
-                    <View style={styles.heroCard}>
-                        <Text style={styles.heroTitle}>
-                            Асуудлынхаа шийдлийг{'\n'}олоорой
-                        </Text>
-                        <TouchableOpacity
-                            style={styles.heroButton}
-                            activeOpacity={0.8}
-                            onPress={() => router.push('/(tabs)/monks')}
-                        >
-                            <Text style={styles.heroButtonText}>Цаг захиалах →</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* ===== SERVICES SECTION ===== */}
-                    <Text style={styles.sectionTitle}>Үйлчилгээ</Text>
-                    <View style={styles.servicesGrid}>
-                        {SERVICES.map((service, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={styles.serviceCard}
-                                activeOpacity={0.7}
-                                onPress={() => router.push('/(tabs)/monks')}
+                                onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                    router.push('/notifications');
+                                }}
                             >
-                                <Text style={styles.serviceEmoji}>{service.emoji}</Text>
-                                <Text style={styles.serviceLabel}>{service.label}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
+                                <Bell size={22} color={COLORS.text} strokeWidth={2} />
+                            </Pressable>
+                            <Pressable
+                                style={styles.avatarContainer}
 
-                    {/* ===== TOP MONKS ===== */}
-                    <Text style={styles.sectionTitle}>Шилдэг үзмэрчид</Text>
-                    {topMonks.map((monk) => (
-                        <View key={monk._id} style={styles.monkCard}>
-                            <TouchableOpacity
-                                style={styles.monkCardTop}
-                                activeOpacity={0.7}
-                                onPress={() => router.push(`/monk/${monk._id}`)}
+                                onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                    router.push('/(tabs)/profile');
+                                }}
                             >
                                 <Image
-                                    source={{ uri: monk.image || 'https://via.placeholder.com/150' }}
-                                    style={styles.monkAvatar}
+                                    source={{ uri: avatarUri }}
+                                    style={styles.avatarImage}
                                     contentFit="cover"
                                 />
-                                <View style={styles.monkInfo}>
-                                    <Text style={styles.monkName}>{t(monk.name)}</Text>
-                                    <Text style={styles.monkSubtitle}>
-                                        {t(monk.title)} • {monk.yearsOfExperience || 0} жил
-                                    </Text>
-                                </View>
-                                <Text style={styles.monkPrice}>{formatPrice(monk)}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.bookButton}
-                                activeOpacity={0.8}
-                                onPress={() => router.push(`/booking/${monk._id}`)}
-                            >
-                                <Text style={styles.bookButtonText}>Цаг захиалах →</Text>
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
-                    ))}
+                    </Reanimated.View>
+
+                    {/* ===== HERO BANNER ===== */}
+                    <Reanimated.View entering={FadeInDown.delay(80).duration(500)}>
+                        <TouchableScale
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                router.push('/(tabs)/monks');
+                            }}
+                        >
+                            <LinearGradient
+                                colors={[COLORS.amber, COLORS.gold, COLORS.goldMid, COLORS.goldBright]}
+                                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                                style={styles.heroBanner}
+                            >
+                                {/* Shine streak */}
+                                <View style={styles.heroShine} />
+                                {/* Bubble */}
+                                <View style={styles.heroBubble} />
+                                {/* Watermark */}
+                                <Text style={styles.heroWatermark}>🔮</Text>
+
+                                <Text style={styles.heroTitle}>
+                                    Асуудлынхаа шийдлийг{'\n'}олоорой
+                                </Text>
+                                <Text style={styles.heroSub}>
+                                    Мэргэжлийн үзмэрчидтэй холбогдоорой
+                                </Text>
+                                <View style={styles.heroCTA}>
+                                    <Text style={styles.heroCTAText}>Цаг захиалах</Text>
+                                </View>
+                            </LinearGradient>
+                        </TouchableScale>
+                    </Reanimated.View>
+
+                    {/* ===== SERVICES SECTION ===== */}
+                    <Reanimated.View entering={FadeInDown.delay(160).duration(500)}>
+                        <Text style={styles.sectionTitle}>Үйлчилгээ</Text>
+                        <View style={styles.servicesGrid}>
+                            {SERVICES.map((service, index) => (
+                                <TouchableScale
+                                    key={index}
+                                    style={styles.serviceCard}
+                                    onPress={() => {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        router.push('/(tabs)/monks');
+                                    }}
+                                >
+                                    <LinearGradient
+                                        colors={[COLORS.goldPale, COLORS.goldSoft]}
+                                        style={styles.serviceIconBg}
+                                    >
+                                        <Text style={styles.serviceEmoji}>{service.emoji}</Text>
+                                    </LinearGradient>
+                                    <Text style={styles.serviceLabel}>{service.label}</Text>
+                                </TouchableScale>
+                            ))}
+                        </View>
+                    </Reanimated.View>
+
+                    {/* ===== TOP MONKS ===== */}
+                    <Reanimated.View entering={FadeInDown.delay(240).duration(500)}>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>Шилдэг үзмэрчид</Text>
+                            <Pressable
+                                onPress={() => router.push('/(tabs)/monks')}
+
+                            >
+                                <Text style={styles.seeAll}>Бүгд →</Text>
+                            </Pressable>
+                        </View>
+
+                        {isLoading && (
+                            <View style={styles.emptyState}>
+                                <Text style={styles.emptyText}>Уншиж байна...</Text>
+                            </View>
+                        )}
+
+                        {!isLoading && topMonks.length === 0 && (
+                            <View style={styles.emptyState}>
+                                <Text style={styles.emptyEmoji}>📿</Text>
+                                <Text style={styles.emptyTitle}>Одоогоор үзмэрч алга</Text>
+                                <Text style={styles.emptySub}>Тун удахгүй нэмэгдэх болно</Text>
+                            </View>
+                        )}
+
+                        {topMonks.map((monk, idx) => (
+                            <Reanimated.View key={monk._id} entering={FadeInDown.delay(240 + Math.min(idx * 80, 320)).duration(500)}>
+                                <TouchableScale
+                                    style={styles.monkCard}
+                                    onPress={() => {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        router.push(`/monk/${monk._id}`);
+                                    }}
+                                >
+                                    {/* Special stripe */}
+                                    {monk.isSpecial && (
+                                        <View style={styles.specialStripe}>
+                                            <View style={styles.specialDot} />
+                                            <Text style={styles.specialText}>Онцлох үзмэрч</Text>
+                                        </View>
+                                    )}
+
+                                    <View style={styles.monkContent}>
+                                        <View style={styles.monkCardTop}>
+                                            <Image
+                                                source={{ uri: monk.image || 'https://via.placeholder.com/150' }}
+                                                style={styles.monkAvatar}
+                                                contentFit="cover"
+                                            />
+                                            <View style={styles.monkInfo}>
+                                                <Text style={styles.monkName}>{t(monk.name)}</Text>
+                                                <Text style={styles.monkSubtitle}>
+                                                    {t(monk.title)} • {monk.yearsOfExperience || 0} жил
+                                                </Text>
+                                                {/* Tag chips */}
+                                                {monk.specialties && monk.specialties.length > 0 && (
+                                                    <View style={styles.chipRow}>
+                                                        {monk.specialties.slice(0, 2).map((sp, i) => (
+                                                            <View key={i} style={styles.chip}>
+                                                                <Text style={styles.chipText}>{sp}</Text>
+                                                            </View>
+                                                        ))}
+                                                    </View>
+                                                )}
+                                                {/* Rating */}
+                                                <View style={styles.ratingRow}>
+                                                    <Star size={10} color={COLORS.goldBright} fill={COLORS.goldBright} />
+                                                    <Text style={styles.ratingNum}>{(monk as any).rating || '—'}</Text>
+                                                </View>
+                                            </View>
+                                            <Text style={styles.monkPrice}>{formatPrice(monk)}</Text>
+                                        </View>
+
+                                        <TouchableScale
+                                            onPress={() => {
+                                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                                router.push(`/booking/${monk._id}`);
+                                            }}
+                                            style={styles.bookButtonContainer}
+                                        >
+                                            <LinearGradient
+                                                colors={[COLORS.goldBright, COLORS.gold, COLORS.amber]}
+                                                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                                                style={[styles.bookButton, SHADOWS.glow]}
+                                            >
+                                                <View style={styles.btnShine} />
+                                                <Text style={styles.bookButtonText}>Цаг захиалах →</Text>
+                                            </LinearGradient>
+                                        </TouchableScale>
+                                    </View>
+                                </TouchableScale>
+                            </Reanimated.View>
+                        ))}
+                    </Reanimated.View>
                 </ScrollView>
             </SafeAreaView>
         </View>
     );
 }
 
-const CARD_SHADOW = {
-    shadowColor: '#000' as const,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-};
-
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#FFFDF4' },
+    container: { flex: 1, backgroundColor: COLORS.bg },
     flex: { flex: 1 },
-    scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
+    scrollContent: {
+        paddingHorizontal: 20,
+        paddingBottom: Platform.OS === 'ios' ? 116 : 96,
+    },
 
+    /* Header */
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -187,69 +294,288 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     headerLeft: { flex: 1 },
-    greeting: { fontSize: 16, color: '#888888', marginBottom: 4 },
-    username: { fontSize: 22, fontWeight: '700', color: '#333333' },
-    avatarCircle: {
-        width: 48, height: 48, borderRadius: 24,
-        overflow: 'hidden', backgroundColor: '#F0F0F0',
+    greeting: {
+        fontSize: 13,
+        color: COLORS.textMute,
+        fontWeight: '500',
+        marginBottom: 4,
     },
-    avatarImage: { width: 48, height: 48 },
+    username: {
+        fontSize: 24,
+        fontWeight: '800',
+        fontFamily: FONT.display,
+        color: COLORS.text,
+    },
+    bellContainer: {
+        width: 38, height: 38, borderRadius: 12, backgroundColor: COLORS.surface,
+        borderWidth: 1, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center',
+        ...SHADOWS.sm,
+    },
+    avatarContainer: {
+        width: 44, height: 44, borderRadius: 14,
+        overflow: 'hidden',
+        borderWidth: 1.5,
+        borderColor: COLORS.borderMed,
+        ...SHADOWS.sm,
+    },
+    avatarImage: { width: '100%', height: '100%' },
 
-    heroCard: {
-        backgroundColor: '#E5B22D',
-        borderRadius: 20,
-        padding: 28,
+    /* Hero Banner */
+    heroBanner: {
+        borderRadius: 22,
+        padding: 22,
         marginBottom: 28,
+        position: 'relative',
+        overflow: 'hidden',
+        ...SHADOWS.lg,
+        elevation: 8,
+    },
+    heroShine: {
+        position: 'absolute',
+        top: 0,
+        left: '-20%',
+        width: '40%',
+        height: '100%',
+        backgroundColor: 'rgba(255,255,255,0.10)',
+        transform: [{ skewX: '-15deg' }],
+    },
+    heroBubble: {
+        position: 'absolute',
+        right: -30,
+        bottom: -30,
+        width: 110,
+        height: 110,
+        borderRadius: 55,
+        backgroundColor: 'rgba(255,255,255,0.07)',
+    },
+    heroWatermark: {
+        position: 'absolute',
+        right: 14,
+        top: 10,
+        fontSize: 56,
+        opacity: 0.12,
     },
     heroTitle: {
-        fontSize: 22, fontWeight: '700', color: '#FFFFFF',
-        lineHeight: 32, marginBottom: 20,
+        fontSize: 19,
+        fontWeight: '800',
+        color: '#FFFBEC',
+        fontFamily: FONT.display,
+        lineHeight: 27,
+        marginBottom: 6,
     },
-    heroButton: {
+    heroSub: {
+        fontSize: 12,
+        color: 'rgba(255,248,220,0.70)',
+        marginBottom: 18,
+    },
+    heroCTA: {
         alignSelf: 'flex-start',
-        backgroundColor: '#FFFFFF',
-        paddingHorizontal: 20, paddingVertical: 12,
-        borderRadius: 30,
+        backgroundColor: 'rgba(255,252,242,0.92)',
+        borderRadius: 22,
+        paddingHorizontal: 18,
+        paddingVertical: 9,
     },
-    heroButtonText: { color: '#E5B22D', fontWeight: '700', fontSize: 14 },
+    heroCTAText: {
+        color: COLORS.amber,
+        fontWeight: '800',
+        fontSize: 13,
+    },
 
-    sectionTitle: {
-        fontSize: 20, fontWeight: '700', color: '#333333', marginBottom: 16,
+    /* Section */
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
     },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        fontFamily: FONT.display,
+        color: COLORS.text,
+        marginBottom: 14,
+    },
+    seeAll: {
+        fontSize: 13,
+        color: COLORS.gold,
+        fontWeight: '600',
+        marginBottom: 14,
+    },
+
+    /* Service cards (2x2 grid) */
     servicesGrid: {
-        flexDirection: 'row', flexWrap: 'wrap',
-        justifyContent: 'space-between', marginBottom: 28,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        marginBottom: 28,
     },
     serviceCard: {
         width: (SCREEN_WIDTH - 56) / 2,
-        backgroundColor: '#FFFFFF', borderRadius: 20,
-        paddingVertical: 24, alignItems: 'center',
-        justifyContent: 'center', marginBottom: 16,
-        ...CARD_SHADOW,
+        backgroundColor: COLORS.surface,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        paddingVertical: 18,
+        paddingHorizontal: 14,
+        alignItems: 'center',
+        marginBottom: 12,
+        ...SHADOWS.sm,
+        elevation: 2,
+        overflow: 'hidden',
     },
-    serviceEmoji: { fontSize: 32, marginBottom: 10 },
-    serviceLabel: { fontSize: 14, fontWeight: '600', color: '#333333' },
+    serviceIconBg: {
+        width: 48,
+        height: 48,
+        borderRadius: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 9,
+    },
+    serviceEmoji: { fontSize: 24 },
+    serviceLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: COLORS.textSub,
+    },
 
+    /* Monk cards */
     monkCard: {
-        backgroundColor: '#FFFFFF', borderRadius: 20,
-        padding: 16, marginBottom: 16,
-        ...CARD_SHADOW,
+        backgroundColor: COLORS.surface,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        padding: 0,
+        overflow: 'hidden',
+        marginBottom: 14,
+        ...SHADOWS.md,
+        elevation: 4,
+    },
+    specialStripe: {
+        height: 28,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.divider,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingLeft: 14,
+        gap: 5,
+    },
+    specialDot: {
+        width: 4, height: 4, borderRadius: 2,
+        backgroundColor: COLORS.gold,
+    },
+    specialText: {
+        fontSize: 10,
+        color: COLORS.gold,
+        letterSpacing: 1,
+        fontWeight: '600',
+        fontFamily: FONT.display,
+    },
+    monkContent: {
+        padding: 14,
     },
     monkCardTop: {
-        flexDirection: 'row', alignItems: 'center', marginBottom: 14,
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 14,
     },
     monkAvatar: {
-        width: 52, height: 52, borderRadius: 26, backgroundColor: '#F0F0F0',
+        width: 56, height: 56, borderRadius: 16,
+        borderWidth: 1.5,
+        borderColor: COLORS.borderMed,
+        backgroundColor: COLORS.goldPale,
     },
-    monkInfo: { flex: 1, marginLeft: 14 },
+    monkInfo: { flex: 1, marginLeft: 12 },
     monkName: {
-        fontSize: 16, fontWeight: '700', color: '#333333', marginBottom: 3,
+        fontSize: 15,
+        fontWeight: '700',
+        fontFamily: FONT.display,
+        color: COLORS.text,
+        marginBottom: 2,
     },
-    monkSubtitle: { fontSize: 13, color: '#888888' },
-    monkPrice: { fontSize: 16, fontWeight: '700', color: '#E5B22D' },
+    monkSubtitle: {
+        fontSize: 12,
+        color: COLORS.textSub,
+        marginBottom: 6,
+    },
+    chipRow: {
+        flexDirection: 'row',
+        gap: 6,
+        marginBottom: 6,
+    },
+    chip: {
+        backgroundColor: 'rgba(200,150,12,0.09)',
+        borderRadius: 6,
+        paddingHorizontal: 7,
+        paddingVertical: 2,
+    },
+    chipText: {
+        fontSize: 10,
+        color: COLORS.gold,
+        fontWeight: '600',
+    },
+    ratingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    ratingNum: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: COLORS.text,
+    },
+    monkPrice: {
+        fontFamily: FONT.display,
+        fontSize: 15,
+        fontWeight: '800',
+        color: COLORS.gold,
+    },
+    bookButtonContainer: {
+        width: '100%',
+    },
     bookButton: {
-        backgroundColor: '#E5B22D', borderRadius: 20,
-        paddingVertical: 14, alignItems: 'center',
+        borderRadius: 16,
+        paddingVertical: 15,
+        alignItems: 'center',
+        elevation: 8,
     },
-    bookButtonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+    btnShine: {
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.22)',
+    },
+    bookButtonText: {
+        color: '#1C0E00',
+        fontWeight: '800',
+        fontSize: 15,
+        letterSpacing: 0.5,
+        fontFamily: FONT.display,
+    },
+
+    /* Empty state */
+    emptyState: {
+        paddingVertical: 72,
+        alignItems: 'center',
+    },
+    emptyEmoji: {
+        fontSize: 56,
+        marginBottom: 18,
+    },
+    emptyTitle: {
+        fontFamily: FONT.display,
+        fontSize: 17,
+        fontWeight: '600',
+        color: COLORS.textSub,
+    },
+    emptySub: {
+        fontSize: 13,
+        color: COLORS.textMute,
+        textAlign: 'center',
+        marginTop: 6,
+        lineHeight: 20,
+    },
+    emptyText: {
+        color: COLORS.textMute,
+    }
 });

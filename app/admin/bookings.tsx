@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
     View, Text, Pressable, StyleSheet, FlatList,
-    RefreshControl, Modal, ScrollView, Alert, TextInput
+    RefreshControl, Modal, ScrollView, Alert, TextInput, Platform, ActivityIndicator, Animated as RNAnimated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -11,15 +11,17 @@ import { ArrowLeft, X, Search } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import api from '../../lib/api';
-import { COLORS, SHADOWS } from '../../design-system/theme';
+import { COLORS, SHADOWS, FONT } from '../../design-system/theme';
+import { useUserStore } from '../../store/userStore';
 
 const FILTERS = ['Бүгд', 'Өнөөдөр', 'Энэ долоо хоног'];
 
 const STATUS_CONFIG: Record<string, { label: string; emoji: string; bg: string; color: string }> = {
-    pending: { label: 'Хүлээгдэж буй', emoji: '🟡', bg: '#FEF3C7', color: '#92400E' },
+    pending: { label: 'Хүлээгдэж', emoji: '🟡', bg: '#FEF3C7', color: '#92400E' },
     confirmed: { label: 'Баталгаажсан', emoji: '🟢', bg: '#D1FAE5', color: '#065F46' },
     completed: { label: 'Дууссан', emoji: '🔵', bg: '#DBEAFE', color: '#1E40AF' },
     cancelled: { label: 'Цуцлагдсан', emoji: '🔴', bg: '#FEE2E2', color: '#991B1B' },
+    rejected: { label: 'Татгалзсан', emoji: '🔴', bg: '#FEE2E2', color: '#991B1B' },
 };
 
 const t = (data: any) => {
@@ -28,22 +30,43 @@ const t = (data: any) => {
     return data.mn || data.en || '';
 };
 
+function SkeletonRect({ width, height, style }: any) {
+    const pulse = useRef(new RNAnimated.Value(0.35)).current;
+    useEffect(() => {
+        RNAnimated.loop(
+            RNAnimated.sequence([
+                RNAnimated.timing(pulse, { toValue: 0.75, duration: 900, useNativeDriver: true }),
+                RNAnimated.timing(pulse, { toValue: 0.35, duration: 900, useNativeDriver: true })
+            ])
+        ).start();
+    }, [pulse]);
+    return (
+        <RNAnimated.View style={[{ width, height, backgroundColor: COLORS.goldPale, borderRadius: 8, opacity: pulse }, style]} />
+    );
+}
+
 export default function AdminBookings() {
     const router = useRouter();
     const queryClient = useQueryClient();
+    const { user: dbUser } = useUserStore();
     const [activeFilter, setActiveFilter] = useState('Бүгд');
     const [searchQuery, setSearchQuery] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
     const [modalVisible, setModalVisible] = useState(false);
 
-    const { data: bookings, isLoading, refetch } = useQuery({
-        queryKey: ['admin-bookings-all'],
+    const { data: adminData, isLoading, error, refetch } = useQuery({
+        queryKey: ['admin-data', dbUser?._id],
         queryFn: async () => {
-            const res = await api.get('/admin/data');
-            return (res.data?.bookings || []) as any[];
+            const res = await api.get(`/admin/data?userId=${dbUser?._id}`);
+            return res.data;
         },
+        enabled: !!dbUser?._id,
     });
+
+    const bookings = adminData?.bookings || [];
+    const completed = bookings.filter((b: any) => b.status === 'completed');
+    const totalRevenue = adminData?.stats?.totalRevenue || completed.reduce((sum: number, b: any) => sum + (b.amount || b.price || 0), 0);
 
     const updateMutation = useMutation({
         mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -52,7 +75,7 @@ export default function AdminBookings() {
         },
         onSuccess: () => {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            queryClient.invalidateQueries({ queryKey: ['admin-bookings-all'] });
+            queryClient.invalidateQueries({ queryKey: ['admin-data'] });
             setModalVisible(false);
         },
         onError: () => {
@@ -71,41 +94,48 @@ export default function AdminBookings() {
         if (!bookings) return [];
         let result = bookings;
 
-        // 1. Text Search Filter (Name, Email, Phone)
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase().trim();
             result = result.filter((b: any) => {
-                const nameMatch = (b.userName || '').toLowerCase().includes(q);
+                const nameMatch = (b.userName || b.clientName || '').toLowerCase().includes(q);
                 const emailMatch = (b.userEmail || '').toLowerCase().includes(q);
-                // Assume phone might be named phone, phoneNumber, userPhone, etc. or embedded in booking data
                 const phoneMatch = (b.userPhone || b.phone || '').toLowerCase().includes(q);
                 return nameMatch || emailMatch || phoneMatch;
             });
         }
 
-        // 2. Date Filter
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
 
         if (activeFilter === 'Өнөөдөр') {
-            result = result.filter((b: any) => b.date?.startsWith(todayStr));
+            result = result.filter((b: any) =>
+                (b.date || '').startsWith(todayStr) || (b.createdAt || '').startsWith(todayStr)
+            );
         } else if (activeFilter === 'Энэ долоо хоног') {
             const weekAgo = new Date(now);
             weekAgo.setDate(now.getDate() - 7);
-            result = result.filter((b: any) => new Date(b.date) >= weekAgo);
+            result = result.filter((b: any) => new Date(b.date || b.createdAt) >= weekAgo);
         }
 
-        return result;
+        return result.sort((a: any, b: any) => new Date(b.date || b.createdAt).getTime() - new Date(a.date || a.createdAt).getTime());
     }, [bookings, activeFilter, searchQuery]);
 
     const renderBooking = useCallback(({ item, index }: { item: any; index: number }) => {
         const cfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.pending;
         const serviceNameT = item.serviceName ? t(item.serviceName) : 'Үйлчилгээ тодорхойгүй';
 
+        const displayName = item.userName || item.clientName || 'Хэрэглэгч';
+        const initial = displayName.charAt(0).toUpperCase();
+
+        let badgeBg = '#FEF3C7';
+        let badgeColor = '#92400E';
+        if (item.status === 'completed') { badgeBg = '#DBEAFE'; badgeColor = '#1E40AF'; }
+
         return (
-            <Animated.View entering={FadeInDown.delay(index * 60).duration(400)}>
+            <Animated.View entering={FadeInDown.delay(Math.min(index * 80, 320)).duration(400)}>
                 <Pressable
                     style={st.bookingCard}
+
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         setSelectedBooking(item);
@@ -113,21 +143,26 @@ export default function AdminBookings() {
                     }}
                 >
                     <View style={st.bookingTop}>
+                        <LinearGradient colors={[COLORS.goldPale, COLORS.goldSoft]} style={st.avatarCircle}>
+                            <Text style={st.avatarInitial}>{initial}</Text>
+                        </LinearGradient>
                         <View style={{ flex: 1 }}>
-                            {/* Who booked who */}
-                            <Text style={st.bookingName}>
-                                {item.userName || item.userEmail || 'Хэрэглэгч'} ➔ {t(item.monkName) || 'Үзмэрч'}
-                            </Text>
-                            <Text style={st.bookingDate}>
-                                {item.date?.split('T')[0]} • {item.time}
-                            </Text>
+                            <Text style={st.bookingName}>{displayName}</Text>
+                            <Text style={st.bookingMonk}>➔ {t(item.monkName) || 'Үзмэрч'}</Text>
                         </View>
                         <View style={[st.statusBadge, { backgroundColor: cfg.bg }]}>
-                            <Text style={{ fontSize: 10 }}>{cfg.emoji}</Text>
                             <Text style={[st.statusText, { color: cfg.color }]}>{cfg.label}</Text>
                         </View>
                     </View>
-                    <Text style={st.bookingMonk}>✨ {serviceNameT}</Text>
+                    <View style={st.divider} />
+                    <View style={st.bookingBottom}>
+                        <Text style={st.bookingDate}>
+                            📅 {item.date?.split('T')[0]} {item.time} • {serviceNameT}
+                        </Text>
+                        <Text style={[st.bookingPrice, { color: badgeColor, backgroundColor: badgeBg }]}>
+                            {(item.amount || item.price || 0) > 0 ? `${(item.amount || item.price).toLocaleString()}₮` : 'Үнэгүй'}
+                        </Text>
+                    </View>
                 </Pressable>
             </Animated.View>
         );
@@ -137,70 +172,92 @@ export default function AdminBookings() {
         <View style={st.container}>
             <SafeAreaView style={{ flex: 1 }} edges={['top']}>
                 <View style={st.header}>
-                    <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }} style={st.backBtn}>
+                    <Pressable
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }}
+                        style={st.backBtn}
+
+                    >
                         <ArrowLeft size={22} color={COLORS.text} />
                     </Pressable>
                     <Text style={st.headerTitle}>Захиалга удирдах</Text>
-                    <View style={{ width: 44 }} />
+                    <View style={{ width: 38 }} />
                 </View>
 
-                {/* Search Bar */}
+                {/* Stats Bar */}
+                <View style={st.statsBar}>
+                    <Text style={st.statsBarText}>
+                        Нийт: {bookings.length}  |  Дууссан: {completed.length}  |  Орлого: {totalRevenue.toLocaleString()}₮
+                    </Text>
+                </View>
+
+                {error && (
+                    <View style={st.errorBlock}>
+                        <Text style={st.errorText}>⚠️ Мэдээлэл ачаалж чадсангүй</Text>
+                        <Pressable onPress={() => refetch()}><Text style={st.errorAction}>Дахин оролдох</Text></Pressable>
+                    </View>
+                )}
+
                 <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
                     <View style={st.searchContainer}>
-                        <Search size={20} color={COLORS.textLight} style={{ marginLeft: 16, marginRight: 8 }} />
+                        <Search size={16} color={COLORS.gold} style={{ marginRight: 8 }} />
                         <TextInput
                             style={st.searchInput}
                             placeholder="Нэр, утас, имэйлээр хайх..."
-                            placeholderTextColor={COLORS.textLight}
+                            placeholderTextColor={COLORS.textMute}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                             autoCapitalize="none"
                             autoCorrect={false}
                         />
                         {searchQuery.length > 0 && (
-                            <Pressable onPress={() => setSearchQuery('')} style={{ padding: 10 }}>
-                                <X size={18} color={COLORS.textMid} />
+                            <Pressable onPress={() => setSearchQuery('')} hitSlop={10} >
+                                <X size={16} color={COLORS.textMute} />
                             </Pressable>
                         )}
                     </View>
                 </View>
 
-                {/* Filters */}
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10, marginBottom: 14 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10, marginBottom: 14 }} style={{ flexGrow: 0 }}>
                     {FILTERS.map((f) => {
                         const isActive = f === activeFilter;
                         return isActive ? (
-                            <LinearGradient key={f} colors={[COLORS.gold, COLORS.deepGold]} style={st.filterChip}>
-                                <Pressable onPress={() => setActiveFilter(f)}>
+                            <Pressable key={f} onPress={() => setActiveFilter(f)} >
+                                <LinearGradient colors={[COLORS.goldBright, COLORS.gold]} style={[st.filterChipActive, SHADOWS.glow]}>
                                     <Text style={st.filterTextActive}>{f}</Text>
-                                </Pressable>
-                            </LinearGradient>
+                                </LinearGradient>
+                            </Pressable>
                         ) : (
-                            <Pressable key={f} style={st.filterChipInactive} onPress={() => setActiveFilter(f)}>
+                            <Pressable key={f} style={st.filterChipInactive} onPress={() => setActiveFilter(f)} >
                                 <Text style={st.filterTextInactive}>{f}</Text>
                             </Pressable>
                         );
                     })}
                 </ScrollView>
 
-                <FlatList
-                    data={filteredBookings}
-                    keyExtractor={(it) => it._id || Math.random().toString()}
-                    contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
-                    showsVerticalScrollIndicator={false}
-                    refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} colors={[COLORS.gold]} />
-                    }
-                    renderItem={renderBooking}
-                    ListEmptyComponent={
-                        <View style={{ alignItems: 'center', paddingTop: 60 }}>
-                            <Text style={{ fontSize: 40, marginBottom: 12 }}>📋</Text>
-                            <Text style={{ color: COLORS.textLight, fontFamily: 'Georgia' }}>
-                                {isLoading ? 'Уншиж байна...' : 'Захиалга байхгүй байна'}
-                            </Text>
-                        </View>
-                    }
-                />
+                {isLoading ? (
+                    <View style={{ padding: 20 }}>
+                        <SkeletonRect width="100%" height={100} style={{ marginBottom: 14 }} />
+                        <SkeletonRect width="100%" height={100} style={{ marginBottom: 14 }} />
+                        <SkeletonRect width="100%" height={100} style={{ marginBottom: 14 }} />
+                    </View>
+                ) : (
+                    <FlatList
+                        data={filteredBookings}
+                        keyExtractor={(it) => it._id || Math.random().toString()}
+                        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: Platform.OS === 'ios' ? 116 : 96 }}
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={
+                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} />
+                        }
+                        renderItem={renderBooking}
+                        ListEmptyComponent={
+                            <View style={st.emptyState}>
+                                <Text style={st.emptyEmoji}>📋</Text>
+                                <Text style={st.emptyText}>Захиалга байхгүй байна</Text>
+                            </View>
+                        }
+                    />
+                )}
             </SafeAreaView>
 
             {/* Bottom Sheet Modal */}
@@ -208,7 +265,7 @@ export default function AdminBookings() {
                 <View style={st.modalOverlay}>
                     <View style={st.modalSheet}>
                         <View style={st.modalHandle} />
-                        <Pressable onPress={() => setModalVisible(false)} style={st.modalClose}>
+                        <Pressable onPress={() => setModalVisible(false)} style={st.modalClose} >
                             <X size={18} color={COLORS.textMid} />
                         </Pressable>
 
@@ -217,11 +274,11 @@ export default function AdminBookings() {
                         <View style={st.modalDetails}>
                             <View style={st.detailRow}>
                                 <Text style={st.detailLabel}>Хэрэглэгч:</Text>
-                                <Text style={st.detailValue}>{selectedBooking?.userName || 'Тодорхойгүй'}</Text>
+                                <Text style={st.detailValue}>{selectedBooking?.userName || selectedBooking?.clientName || 'Тодорхойгүй'}</Text>
                             </View>
                             {selectedBooking?.userEmail && (
                                 <View style={st.detailRow}>
-                                    <Text style={st.detailLabel}>Арга хэмжээ:</Text>
+                                    <Text style={st.detailLabel}>Имэйл:</Text>
                                     <Text style={st.detailValue}>{selectedBooking.userEmail}</Text>
                                 </View>
                             )}
@@ -239,6 +296,12 @@ export default function AdminBookings() {
                                     {selectedBooking?.date?.split('T')[0]} • {selectedBooking?.time}
                                 </Text>
                             </View>
+                            <View style={st.detailRowFilled}>
+                                <Text style={st.detailLabelBold}>💰 Захиалгын дүн:</Text>
+                                <Text style={st.detailValueGold}>
+                                    {(selectedBooking?.amount || selectedBooking?.price || 0).toLocaleString()}₮
+                                </Text>
+                            </View>
                         </View>
 
                         {(['confirmed', 'completed', 'cancelled'] as const).map((status) => {
@@ -251,6 +314,7 @@ export default function AdminBookings() {
                                             updateMutation.mutate({ id: selectedBooking._id, status });
                                         }
                                     }}
+
                                     style={[st.statusOption, { borderColor: cfg.color }]}
                                 >
                                     <Text style={{ fontSize: 16 }}>{cfg.emoji}</Text>
@@ -272,67 +336,90 @@ const st = StyleSheet.create({
         paddingHorizontal: 20, paddingVertical: 12,
     },
     backBtn: {
-        width: 44, height: 44, borderRadius: 14,
-        backgroundColor: 'rgba(255,255,255,0.85)', borderWidth: 1, borderColor: COLORS.border,
+        width: 38, height: 38, borderRadius: 12,
+        backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border,
         alignItems: 'center', justifyContent: 'center',
+        ...SHADOWS.sm,
     },
-    headerTitle: { fontFamily: 'Georgia', fontSize: 18, fontWeight: '700', color: COLORS.text },
+    headerTitle: { fontFamily: FONT.display, fontSize: 18, fontWeight: '700', color: COLORS.text },
 
-    /* Search Bar */
+    statsBar: {
+        flexDirection: 'row', backgroundColor: COLORS.goldPale, borderRadius: 14,
+        paddingVertical: 10, paddingHorizontal: 16, borderWidth: 1, borderColor: COLORS.border,
+        marginHorizontal: 20, marginBottom: 12, alignItems: 'center', justifyContent: 'center'
+    },
+    statsBarText: { fontSize: 12, color: COLORS.amber, fontWeight: '700' },
+
     searchContainer: {
         flexDirection: 'row', alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.85)',
-        borderWidth: 1, borderColor: COLORS.border,
-        borderRadius: 16, height: 48,
+        backgroundColor: COLORS.bgWarm, borderRadius: 14, borderWidth: 1, borderColor: COLORS.border,
+        paddingHorizontal: 16, height: 46,
     },
     searchInput: { flex: 1, fontSize: 15, color: COLORS.text, height: '100%' },
 
-    /* Filters */
-    filterChip: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 30 },
+    filterChipActive: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, elevation: 5 },
     filterChipInactive: {
-        paddingHorizontal: 20, paddingVertical: 10, borderRadius: 30,
-        backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: COLORS.border,
+        paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
+        backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border,
     },
-    filterTextActive: { fontSize: 13, fontWeight: '700', color: '#1A0800' },
-    filterTextInactive: { fontSize: 13, fontWeight: '600', color: COLORS.textMid },
+    filterTextActive: { fontSize: 12, fontWeight: '700', color: '#1C0E00' },
+    filterTextInactive: { fontSize: 12, fontWeight: '500', color: COLORS.textSub },
 
-    /* Booking card */
     bookingCard: {
-        backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 18,
-        borderWidth: 1, borderColor: COLORS.border, padding: 16, marginBottom: 10,
-        ...SHADOWS.card,
+        backgroundColor: COLORS.surface, borderRadius: 20,
+        borderWidth: 1, borderColor: COLORS.border, padding: 16, marginBottom: 14, overflow: 'hidden',
+        ...SHADOWS.md, elevation: 4,
     },
-    bookingTop: { flexDirection: 'row', alignItems: 'center' },
-    bookingName: { fontFamily: 'Georgia', fontSize: 15, fontWeight: '700', color: COLORS.text, marginBottom: 2 },
-    bookingDate: { fontSize: 12, color: COLORS.textLight },
-    bookingMonk: { fontSize: 13, color: COLORS.textMid, marginTop: 8 },
+    bookingTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+    avatarCircle: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+    avatarInitial: { fontFamily: FONT.display, fontSize: 18, fontWeight: '800', color: COLORS.gold },
+    bookingName: { fontFamily: FONT.display, fontSize: 15, fontWeight: '700', color: COLORS.text, marginBottom: 2 },
+    bookingMonk: { fontSize: 12, color: COLORS.textSub, marginTop: 2 },
+    divider: { height: 1, backgroundColor: COLORS.divider, marginVertical: 14 },
+    bookingBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    bookingDate: { fontSize: 12, color: COLORS.textMute, flex: 1, marginRight: 8 },
+    bookingPrice: { fontFamily: FONT.display, fontSize: 13, fontWeight: '800', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
     statusBadge: {
         flexDirection: 'row', alignItems: 'center', gap: 4,
-        paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12,
+        paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10,
     },
     statusText: { fontSize: 11, fontWeight: '700' },
 
-    /* Modal */
+    emptyState: { paddingVertical: 72, alignItems: 'center' },
+    emptyEmoji: { fontSize: 56, marginBottom: 18 },
+    emptyText: { fontFamily: FONT.display, fontSize: 17, fontWeight: '600', color: COLORS.textSub },
+
+    errorBlock: {
+        backgroundColor: 'rgba(220,38,38,0.06)', borderRadius: 16,
+        borderWidth: 1, borderColor: 'rgba(220,38,38,0.15)',
+        padding: 16, margin: 16, alignItems: 'center'
+    },
+    errorText: { color: '#DC2626', fontSize: 14, fontWeight: '600', marginBottom: 8 },
+    errorAction: { color: COLORS.gold, fontWeight: '700' },
+
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
     modalSheet: {
         backgroundColor: COLORS.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28,
         paddingHorizontal: 24, paddingTop: 12, paddingBottom: 40,
     },
-    modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: COLORS.border, alignSelf: 'center', marginBottom: 20 },
+    modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: COLORS.borderMed, alignSelf: 'center', marginBottom: 20 },
     modalClose: {
         position: 'absolute', top: 16, right: 20, width: 32, height: 32, borderRadius: 16,
-        backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: COLORS.border,
+        backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border,
         alignItems: 'center', justifyContent: 'center', zIndex: 10,
     },
-    modalTitle: { fontFamily: 'Georgia', fontSize: 18, fontWeight: '800', color: COLORS.text, textAlign: 'center', marginBottom: 16 },
-    modalDetails: { backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 16, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: COLORS.border },
+    modalTitle: { fontFamily: FONT.display, fontSize: 18, fontWeight: '800', color: COLORS.text, textAlign: 'center', marginBottom: 16 },
+    modalDetails: { backgroundColor: COLORS.bgWarm, borderRadius: 16, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: COLORS.border },
     detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
-    detailLabel: { fontSize: 13, color: COLORS.textMid, fontWeight: '500' },
+    detailRowFilled: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, marginTop: 8, borderTopWidth: 1, borderTopColor: COLORS.divider, paddingTop: 12 },
+    detailLabelBold: { fontSize: 14, color: COLORS.text, fontWeight: '700' },
+    detailValueGold: { fontFamily: FONT.display, fontSize: 16, color: COLORS.gold, fontWeight: '800' },
+    detailLabel: { fontSize: 13, color: COLORS.textSub, fontWeight: '500' },
     detailValue: { fontSize: 13, color: COLORS.text, fontWeight: '600', maxWidth: '70%', textAlign: 'right' },
     statusOption: {
         flexDirection: 'row', alignItems: 'center', gap: 12,
         borderWidth: 1.5, borderRadius: 16, paddingVertical: 16, paddingHorizontal: 20, marginBottom: 10,
-        backgroundColor: 'rgba(255,255,255,0.8)',
+        backgroundColor: COLORS.surface,
     },
     statusOptionText: { fontSize: 15, fontWeight: '700' },
 });

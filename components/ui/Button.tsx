@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, ActivityIndicator, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { Colors } from '@/constants/Colors';
+import { COLORS } from '../../design-system/theme';
 
 interface ButtonProps {
     title: string;
@@ -89,7 +89,7 @@ export function Button({
                 } ${className}`}
         >
             {isLoading ? (
-                <ActivityIndicator color={variant === 'secondary' ? Colors.monk.text : Colors.monk.primary} />
+                <ActivityIndicator color={variant === 'secondary' ? COLORS.textMid : COLORS.gold} />
             ) : (
                 <>
                     {icon && <View className="mr-2">{icon}</View>}

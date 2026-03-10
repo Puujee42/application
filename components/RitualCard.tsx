@@ -4,6 +4,7 @@ import { Link } from 'expo-router';
 import { RitualItem } from '../lib/data/ritualsData';
 import { Colors } from '../constants/Colors';
 import { useColorScheme } from 'react-native';
+import TouchableScale from './ui/TouchableScale';
 
 interface RitualCardProps {
     item: RitualItem;
@@ -15,14 +16,12 @@ export const RitualCard: React.FC<RitualCardProps> = ({ item }) => {
 
     return (
         <Link href={`/ritual/${item.id}`} asChild>
-            <Pressable
-                style={({ pressed }) => [
+            <TouchableScale
+                style={[
                     styles.card,
                     {
                         backgroundColor: colors.background,
                         borderColor: colors.border,
-                        opacity: pressed ? 0.9 : 1,
-                        transform: [{ scale: pressed ? 0.98 : 1 }],
                     }
                 ]}
                 accessible={true}
@@ -47,7 +46,7 @@ export const RitualCard: React.FC<RitualCardProps> = ({ item }) => {
                 <View style={styles.iconContainer}>
                     <Text style={{ color: colors.icon }}>→</Text>
                 </View>
-            </Pressable>
+            </TouchableScale>
         </Link>
     );
 };

@@ -7,6 +7,7 @@ import { useColorScheme } from 'react-native';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ritualsApi } from '../../lib/api/ritualsApi';
+import TouchableScale from '../../components/ui/TouchableScale';
 
 export default function RitualDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -27,9 +28,9 @@ export default function RitualDetailScreen() {
         return (
             <View style={[styles.centered, { backgroundColor: colors.background }]}>
                 <Text style={{ color: colors.text }}>Ritual not found.</Text>
-                <Pressable onPress={() => router.back()} style={styles.backButtonFallback}>
+                <TouchableScale onPress={() => router.back()} style={styles.backButtonFallback}>
                     <Text style={{ color: colors.tint }}>Go Back</Text>
-                </Pressable>
+                </TouchableScale>
             </View>
         );
     }
@@ -55,7 +56,7 @@ export default function RitualDetailScreen() {
         <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
             {/* Header */}
             <View style={styles.header}>
-                <Pressable
+                <TouchableScale
                     onPress={() => router.back()}
                     style={styles.backButton}
                     hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }} // Enhanced touch target
@@ -63,7 +64,7 @@ export default function RitualDetailScreen() {
                     accessibilityLabel="Go back"
                 >
                     <ArrowLeft size={24} color={colors.text} />
-                </Pressable>
+                </TouchableScale>
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -83,7 +84,7 @@ export default function RitualDetailScreen() {
                         Test connection to the Rust Backend Service.
                     </Text>
 
-                    <Pressable
+                    <TouchableScale
                         style={[
                             styles.primaryButton,
                             { backgroundColor: colors.tint },
@@ -107,7 +108,7 @@ export default function RitualDetailScreen() {
                                 Захиалах (Test Rust API)
                             </Text>
                         )}
-                    </Pressable>
+                    </TouchableScale>
                 </View>
             </ScrollView>
         </View>

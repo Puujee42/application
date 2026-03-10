@@ -10,6 +10,7 @@ import Animated, {
     useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing,
 } from 'react-native-reanimated';
 import api from '../../lib/api';
+import TouchableScale from '../../components/ui/TouchableScale';
 import { COLORS, SHADOWS } from '../../design-system/theme';
 
 // ── Graceful LiveKit import (fails in Expo Go) ──
@@ -65,11 +66,11 @@ export default function LiveSessionScreen() {
                 <Text style={st.errorSub}>
                     LiveKit модуль суулгаагүй байна. Development build үүсгэнэ үү.
                 </Text>
-                <Pressable onPress={() => router.back()} style={{ marginTop: 24 }}>
+                <TouchableScale onPress={() => router.back()} style={{ marginTop: 24 }}>
                     <LinearGradient colors={[COLORS.gold, COLORS.deepGold]} style={st.retryBtn}>
                         <Text style={st.retryBtnText}>← БУЦАХ</Text>
                     </LinearGradient>
-                </Pressable>
+                </TouchableScale>
             </View>
         );
     }
@@ -143,14 +144,14 @@ export default function LiveSessionScreen() {
                 <Animated.View entering={FadeInDown.delay(200).duration(400)} style={{ alignItems: 'center' }}>
                     <Text style={st.errorTitle}>Холболт тасарлаа</Text>
                     <Text style={st.errorSub}>{error}</Text>
-                    <Pressable onPress={handleRetry}>
+                    <TouchableScale onPress={handleRetry}>
                         <LinearGradient colors={[COLORS.gold, COLORS.deepGold]} style={[st.retryBtn, SHADOWS.gold]}>
                             <Text style={st.retryBtnText}>ДАХИН ОРОЛДОХ</Text>
                         </LinearGradient>
-                    </Pressable>
-                    <Pressable onPress={() => router.back()} style={{ marginTop: 16 }}>
+                    </TouchableScale>
+                    <TouchableScale onPress={() => router.back()} style={{ marginTop: 16 }}>
                         <Text style={st.backText}>← Буцах</Text>
-                    </Pressable>
+                    </TouchableScale>
                 </Animated.View>
             </View>
         );
@@ -167,7 +168,7 @@ export default function LiveSessionScreen() {
                     <Text style={st.connectingText}>Холбогдож байна...</Text>
                 </Animated.View>
                 <Animated.View entering={FadeInDown.delay(500).duration(500)}>
-                    <Pressable
+                    <TouchableScale
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                             router.back();
@@ -175,7 +176,7 @@ export default function LiveSessionScreen() {
                         style={st.cancelBtn}
                     >
                         <Text style={st.cancelBtnText}>Болих</Text>
-                    </Pressable>
+                    </TouchableScale>
                 </Animated.View>
             </View>
         );
@@ -194,7 +195,7 @@ export default function LiveSessionScreen() {
                     adaptiveStream: { pixelDensity: 'screen' },
                 }}
                 onDisconnected={handleDisconnect}
-                onError={(err) => {
+                onError={(err: any) => {
                     console.error('LiveKit error:', err);
                     setError('Холболт тасарлаа');
                 }}
@@ -266,10 +267,10 @@ function RoomContent({ onEnd }: { onEnd: () => void }) {
 
     // Separate local vs remote tracks
     const remoteTracks = tracks.filter(
-        (t) => t.participant.sid !== localParticipant?.sid && t.publication?.track
+        (t: any) => t.participant.sid !== localParticipant?.sid && t.publication?.track
     );
     const localTrack = tracks.find(
-        (t) => t.participant.sid === localParticipant?.sid &&
+        (t: any) => t.participant.sid === localParticipant?.sid &&
             t.source === Track.Source.Camera &&
             t.publication?.track
     );
@@ -291,7 +292,7 @@ function RoomContent({ onEnd }: { onEnd: () => void }) {
     }, [room, onEnd]);
 
     // Remote participant name
-    const remoteParticipant = Array.from(room?.remoteParticipants?.values?.() || []);
+    const remoteParticipant: any[] = Array.from(room?.remoteParticipants?.values?.() || []);
     const remoteName = remoteParticipant[0]?.name || remoteParticipant[0]?.identity || '';
 
     return (
@@ -343,12 +344,12 @@ function RoomContent({ onEnd }: { onEnd: () => void }) {
             {/* ── CONTROLS BAR ── */}
             <Animated.View entering={FadeInUp.delay(400).duration(500)} style={st.controlsBar}>
                 {/* Mic */}
-                <Pressable onPress={toggleMic} style={[st.controlBtn, !isMicrophoneEnabled && st.controlBtnMuted]}>
+                <TouchableScale onPress={toggleMic} style={[st.controlBtn, !isMicrophoneEnabled && st.controlBtnMuted]}>
                     <Text style={{ fontSize: 22 }}>{isMicrophoneEnabled ? '🎤' : '🔇'}</Text>
-                </Pressable>
+                </TouchableScale>
 
                 {/* End Call */}
-                <Pressable onPress={handleEnd}>
+                <TouchableScale onPress={handleEnd}>
                     <LinearGradient
                         colors={['#C00000', '#FF3333']}
                         style={[st.endCallBtn, {
@@ -361,12 +362,12 @@ function RoomContent({ onEnd }: { onEnd: () => void }) {
                     >
                         <Text style={{ fontSize: 24 }}>📞</Text>
                     </LinearGradient>
-                </Pressable>
+                </TouchableScale>
 
                 {/* Camera */}
-                <Pressable onPress={toggleCamera} style={[st.controlBtn, !isCameraEnabled && st.controlBtnMuted]}>
+                <TouchableScale onPress={toggleCamera} style={[st.controlBtn, !isCameraEnabled && st.controlBtnMuted]}>
                     <Text style={{ fontSize: 22 }}>{isCameraEnabled ? '📷' : '🚫'}</Text>
-                </Pressable>
+                </TouchableScale>
             </Animated.View>
         </View>
     );

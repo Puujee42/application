@@ -11,6 +11,7 @@ import { ArrowLeft, X, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import api from '../../lib/api';
+import { useUserStore } from '../../store/userStore';
 import { COLORS, SHADOWS } from '../../design-system/theme';
 
 const t = (data: any) => {
@@ -24,6 +25,7 @@ const EMPTY_FORM = { titleMn: '', titleEn: '', contentMn: '', contentEn: '' };
 export default function AdminBlog() {
     const router = useRouter();
     const queryClient = useQueryClient();
+    const { user: dbUser } = useUserStore();
     const [refreshing, setRefreshing] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [editing, setEditing] = useState<any>(null);
@@ -44,9 +46,9 @@ export default function AdminBlog() {
     const saveMutation = useMutation({
         mutationFn: async (data: any) => {
             if (editing?._id) {
-                return api.put('/admin/content', { ...data, id: editing.id || editing._id, type: 'blog' });
+                return api.put(`/admin/content?userId=${dbUser?._id}`, { ...data, id: editing.id || editing._id, type: 'blog' });
             }
-            return api.post('/admin/content', { ...data, type: 'blog' });
+            return api.post(`/admin/content?userId=${dbUser?._id}`, { ...data, type: 'blog' });
         },
         onSuccess: () => {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -62,7 +64,7 @@ export default function AdminBlog() {
 
     const deleteMutation = useMutation({
         mutationFn: async (id: string) => {
-            return api.delete('/admin/content', { data: { id, type: 'blog' } });
+            return api.delete(`/admin/content?userId=${dbUser?._id}`, { data: { id, type: 'blog' } });
         },
         onSuccess: () => {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

@@ -93,7 +93,7 @@ function VideoConference({ onToggleMic, onToggleCam, micEnabled, camEnabled, onD
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.videoGrid}>
-                {tracks.map((track) => renderTrack(track))}
+                {tracks.map((track: any) => renderTrack(track))}
                 {tracks.length === 0 && (
                     <View className="flex-1 justify-center items-center">
                         <Text className="text-white">Waiting for others to join...</Text>

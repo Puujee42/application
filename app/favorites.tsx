@@ -62,7 +62,7 @@ const FavoriteMonkCard = memo(
                         <TouchableOpacity
                             onPress={onRemove}
                             className="w-12 h-12 rounded-full items-center justify-center bg-red-50 border border-red-100 shadow-sm"
-                            activeOpacity={0.7}
+                            
                         >
                             <Heart size={20} color="#EF4444" fill="#EF4444" />
                         </TouchableOpacity>
@@ -161,7 +161,7 @@ export default function FavoritesScreen() {
                             Wander the paths and find guides whose light resonates with your spirit.
                         </Text>
                         <TouchableOpacity
-                            activeOpacity={0.8}
+                            
                             onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                                 router.push('/(tabs)');

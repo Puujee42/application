@@ -14,8 +14,10 @@ import {
 } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import TouchableScale from '../../components/ui/TouchableScale';
 import { getBlogs, createBlog, updateBlog, deleteBlog, uploadImageToCloudinary } from '../../lib/api';
 import { ScrollView } from 'react-native';
+import { useUserStore } from '../../store/userStore';
 
 interface BlogPost {
     id: string;
@@ -59,6 +61,9 @@ export default function BlogTabScreen() {
     const lang = (i18n.language === 'mn' ? 'mn' : 'en') as 'mn' | 'en';
     const tr = (data: { mn: string; en: string }) => data[lang] || data.en;
 
+    const { user: dbUser } = useUserStore();
+    const canManageBlog = dbUser?.role === 'admin' || (dbUser as any)?.isSpecial === true;
+
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('all');
     const [modalVisible, setModalVisible] = useState(false);
@@ -86,7 +91,7 @@ export default function BlogTabScreen() {
     });
 
     const deleteMutation = useMutation({
-        mutationFn: deleteBlog,
+        mutationFn: (id: string) => deleteBlog(id),
         onSuccess: invalidateBlogs,
         onError: () => Alert.alert(tr({ mn: 'Алдаа', en: 'Error' }), tr({ mn: 'Устгахад алдаа гарлаа', en: 'Failed to delete post' })),
     });
@@ -182,13 +187,14 @@ export default function BlogTabScreen() {
 
     const renderBlogCard = ({ item, index }: { item: BlogPost; index: number }) => (
         <Animated.View entering={FadeInDown.delay(index * 80).duration(500)} className="px-6 mb-6">
-            <TouchableOpacity
-                activeOpacity={0.9}
+            <TouchableScale
+
                 onPress={() => {
                     import('expo-haptics').then(Haptics => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
                     router.push(`/blog/${item._id}`);
                 }}
                 onLongPress={() => {
+                    if (!canManageBlog) return;
                     import('expo-haptics').then(Haptics => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
                     Alert.alert(
                         item.title[lang] || item.title.en,
@@ -247,7 +253,7 @@ export default function BlogTabScreen() {
                         </View>
                     )}
                 </View>
-            </TouchableOpacity>
+            </TouchableScale>
         </Animated.View>
     );
 
@@ -295,9 +301,9 @@ export default function BlogTabScreen() {
                         {/* Category Filter Tabs */}
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
                             {categories.map((cat) => (
-                                <TouchableOpacity
+                                <TouchableScale
                                     key={cat.id}
-                                    activeOpacity={0.8}
+
                                     onPress={() => {
                                         import('expo-haptics').then(Haptics => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
                                         setFilter(cat.id);
@@ -313,7 +319,7 @@ export default function BlogTabScreen() {
                                         }`}>
                                         {cat.label}
                                     </Text>
-                                </TouchableOpacity>
+                                </TouchableScale>
                             ))}
                         </ScrollView>
 
@@ -348,17 +354,19 @@ export default function BlogTabScreen() {
             />
 
             {/* ===== FAB — Create New Post ===== */}
-            <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => {
-                    import('expo-haptics').then(Haptics => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
-                    openCreate();
-                }}
-                className="absolute bottom-28 right-6 w-16 h-16 rounded-full bg-monk-primary items-center justify-center shadow-2xl"
-                style={{ shadowColor: '#D4AF37', shadowRadius: 20, shadowOpacity: 0.4, elevation: 12 }}
-            >
-                <Plus size={28} color="#0F172A" strokeWidth={2.5} />
-            </TouchableOpacity>
+            {canManageBlog && (
+                <TouchableScale
+
+                    onPress={() => {
+                        import('expo-haptics').then(Haptics => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
+                        openCreate();
+                    }}
+                    className="absolute bottom-28 right-6 w-16 h-16 rounded-full bg-monk-primary items-center justify-center shadow-2xl"
+                    style={{ shadowColor: '#D4AF37', shadowRadius: 20, shadowOpacity: 0.4, elevation: 12 }}
+                >
+                    <Plus size={28} color="#0F172A" strokeWidth={2.5} />
+                </TouchableScale>
+            )}
 
             {/* ===== Create / Edit Modal ===== */}
             <Modal
@@ -374,15 +382,15 @@ export default function BlogTabScreen() {
                     >
                         {/* Modal Header */}
                         <View className="flex-row items-center justify-between px-6 py-4 border-b border-monk-primary/10 bg-monk-surface">
-                            <TouchableOpacity onPress={closeModal} className="p-2">
+                            <TouchableScale onPress={closeModal} className="p-2">
                                 <X size={22} color="#0F172A" />
-                            </TouchableOpacity>
+                            </TouchableScale>
                             <Text className="text-lg font-serif font-bold text-monk-text">
                                 {editingId
                                     ? tr({ mn: 'Нийтлэл засах', en: 'Edit Post' })
                                     : tr({ mn: 'Шинэ нийтлэл', en: 'New Post' })}
                             </Text>
-                            <TouchableOpacity
+                            <TouchableScale
                                 onPress={handleSubmit}
                                 disabled={isSaving || uploading}
                                 className="px-5 py-2 rounded-full bg-monk-primary"
@@ -397,7 +405,7 @@ export default function BlogTabScreen() {
                                             : tr({ mn: 'Нийтлэх', en: 'Publish' })}
                                     </Text>
                                 )}
-                            </TouchableOpacity>
+                            </TouchableScale>
                         </View>
 
                         <RNScrollView
@@ -407,8 +415,8 @@ export default function BlogTabScreen() {
                             keyboardShouldPersistTaps="handled"
                         >
                             {/* Cover Image */}
-                            <TouchableOpacity
-                                activeOpacity={0.8}
+                            <TouchableScale
+
                                 onPress={pickImage}
                                 className="mb-8 rounded-3xl border-2 border-dashed border-monk-primary/30 bg-monk-surface overflow-hidden"
                                 style={{ height: 180 }}
@@ -435,7 +443,7 @@ export default function BlogTabScreen() {
                                         </Text>
                                     </View>
                                 )}
-                            </TouchableOpacity>
+                            </TouchableScale>
 
                             {/* Title MN */}
                             <View className="mb-5">

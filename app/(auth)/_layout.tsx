@@ -2,8 +2,6 @@ import { Stack, useRouter } from 'expo-router';
 import { useAuth } from '../../lib/useClerkSafe';
 import { useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { NavigationGuard } from '../../src/components/NavigationGuard';
-
 export default function AuthLayout() {
     const { isSignedIn, isLoaded } = useAuth();
     const { isCustomAuth, customToken } = useAuthStore();
