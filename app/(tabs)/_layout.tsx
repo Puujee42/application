@@ -17,7 +17,7 @@ export default function TabLayout() {
                     height: Platform.OS === 'ios' ? 84 : 62,
                     paddingBottom: Platform.OS === 'ios' ? 26 : 6,
                     paddingTop: 8,
-                    shadowColor: '#C8960C',
+                    shadowColor: '#FACC15',
                     shadowOffset: { width: 0, height: -2 },
                     shadowOpacity: 0.1,
                     shadowRadius: 12,
@@ -30,7 +30,7 @@ export default function TabLayout() {
                         intensity={40}
                         style={[
                             StyleSheet.absoluteFillObject,
-                            { backgroundColor: 'rgba(255, 252, 242, 0.45)' }
+                            { backgroundColor: 'rgba(255, 255, 255, 0.85)' }
                         ]}
                     />
                 ),

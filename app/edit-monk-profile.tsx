@@ -382,7 +382,7 @@ const st = StyleSheet.create({
     },
     errorText: { color: '#DC2626', fontSize: 14, textAlign: 'center', fontWeight: '600' },
     avatarContainer: {
-        width: 110, height: 110, borderRadius: 55, backgroundColor: 'rgba(255,252,242,0.6)',
+        width: 110, height: 110, borderRadius: 55, backgroundColor: 'rgba(255, 255, 255, 0.6)',
         borderWidth: 3, borderColor: COLORS.gold, ...SHADOWS.glow, marginBottom: 12,
         alignItems: 'center', justifyContent: 'center'
     },
@@ -396,7 +396,7 @@ const st = StyleSheet.create({
     avatarLabel: { fontFamily: SERIF, fontSize: 14, fontWeight: '600', color: COLORS.textSub },
     sectionTitle: { fontSize: 13, fontWeight: '800', color: COLORS.textSub, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 12, marginLeft: 6, marginTop: 10 },
     card: {
-        backgroundColor: 'rgba(255,252,242,0.95)', borderRadius: 24, padding: 6, marginBottom: 24,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: 24, padding: 6, marginBottom: 24,
         borderWidth: 1, borderColor: COLORS.border, ...SHADOWS.sm,
     },
     inputGroup: { paddingHorizontal: 12, paddingTop: 14, paddingBottom: 6 },

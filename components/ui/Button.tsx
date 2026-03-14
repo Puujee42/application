@@ -90,7 +90,7 @@ export function Button({
                 scaleTo={0.94}
             >
                 <LinearGradient
-                    colors={['#E8B830', '#C8960C']} // Bright Gold to Amber/Deep Gold
+                    colors={['#FEF08A', '#FACC15']} // Bright Divine Yellow to Main Divine Yellow
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={[StyleSheet.absoluteFill, styles.gradientBg]}
@@ -131,10 +131,10 @@ const styles = StyleSheet.create({
         borderRadius: 15,
     },
     secondary: {
-        backgroundColor: '#FFF8E8', // Warm Cream
+        backgroundColor: '#FFFFFF', // Pure White
         borderWidth: 1,
-        borderColor: 'rgba(200,146,10,0.14)',
-        shadowColor: 'rgba(200, 146, 10, 0.1)',
+        borderColor: 'rgba(250, 204, 21, 0.4)',
+        shadowColor: 'rgba(250, 204, 21, 0.2)',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     outline: {
         backgroundColor: 'transparent',
         borderWidth: 1,
-        borderColor: '#C8960C',
+        borderColor: '#FACC15',
     },
     ghost: {
         backgroundColor: 'transparent',

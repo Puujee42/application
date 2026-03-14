@@ -257,7 +257,7 @@ const st = StyleSheet.create({
         alignItems: 'center', justifyContent: 'center',
     },
     bellContainer: {
-        width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,252,242,0.8)',
+        width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255, 255, 255, 0.8)',
         borderWidth: 1, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center',
     },
     headerTitle: { fontFamily: SERIF, fontSize: 18, fontWeight: '700', color: COLORS.text },
@@ -266,7 +266,7 @@ const st = StyleSheet.create({
 
     statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 20, marginBottom: 24 },
     statCard: {
-        width: '48%' as any, backgroundColor: 'rgba(255,252,242,0.92)', borderRadius: 20,
+        width: '48%' as any, backgroundColor: 'rgba(255, 255, 255, 0.92)', borderRadius: 20,
         borderWidth: 1, borderColor: COLORS.border, padding: 18, alignItems: 'center'
     },
     statLabel: { fontSize: 12, fontWeight: '600', color: COLORS.textMid, marginBottom: 8 },
@@ -276,11 +276,11 @@ const st = StyleSheet.create({
     filterRow: { paddingHorizontal: 20, gap: 10 },
     filterChipActive: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 },
     filterTextActive: { color: '#1A0800', fontWeight: '700', fontSize: 13 },
-    filterChipInactive: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(255,252,242,0.92)', borderWidth: 1, borderColor: COLORS.border },
+    filterChipInactive: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(255, 255, 255, 0.92)', borderWidth: 1, borderColor: COLORS.border },
     filterTextInactive: { color: COLORS.textMid, fontWeight: '600', fontSize: 13 },
 
     bookingCard: {
-        backgroundColor: 'rgba(255,252,242,0.92)', borderRadius: 18,
+        backgroundColor: 'rgba(255, 255, 255, 0.92)', borderRadius: 18,
         borderWidth: 1, borderColor: COLORS.border, padding: 14, marginBottom: 10,
         ...SHADOWS.card,
     },
@@ -294,7 +294,7 @@ const st = StyleSheet.create({
     statusText: { fontSize: 10, fontWeight: '700' },
 
     footer: {
-        position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(255,252,242,0.98)',
+        position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(255, 255, 255, 0.98)',
         borderTopWidth: 1, borderTopColor: COLORS.border, padding: 16, paddingHorizontal: 20,
         flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
         paddingBottom: Platform.OS === 'ios' ? 34 : 16,

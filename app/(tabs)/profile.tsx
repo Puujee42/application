@@ -257,7 +257,7 @@ const st = StyleSheet.create({
     guestSub: { fontSize: 15, color: COLORS.textSub, marginBottom: 32 },
     guestBtn: { borderRadius: 16, paddingVertical: 15, paddingHorizontal: 40, width: 240, alignItems: 'center', marginBottom: 14 },
     guestBtnText: { color: '#1C0E00', fontWeight: '800', fontSize: 15, letterSpacing: 0.5, fontFamily: FONT.display },
-    guestOutlineBtn: { borderRadius: 16, paddingVertical: 14, paddingHorizontal: 40, width: 240, alignItems: 'center', backgroundColor: 'rgba(255,252,242,0.8)', borderWidth: 1.5, borderColor: COLORS.gold },
+    guestOutlineBtn: { borderRadius: 16, paddingVertical: 14, paddingHorizontal: 40, width: 240, alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderWidth: 1.5, borderColor: COLORS.gold },
     guestOutlineBtnText: { color: COLORS.gold, fontWeight: '700', fontSize: 14 },
 
     header: { alignItems: 'center', marginTop: 30, marginBottom: 24 },

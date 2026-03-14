@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     },
     heroCTA: {
         alignSelf: 'flex-start',
-        backgroundColor: 'rgba(255,252,242,0.92)',
+        backgroundColor: 'rgba(255, 255, 255, 0.92)',
         borderRadius: 22,
         paddingHorizontal: 18,
         paddingVertical: 9,

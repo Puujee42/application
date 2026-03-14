@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         borderWidth: 1,
         borderColor: 'rgba(200, 146, 10, 0.14)',
-        backgroundColor: 'rgba(255, 252, 242, 0.55)', // sanctuary.surface
+        backgroundColor: 'rgba(255, 255, 255, 0.7)', // sanctuary.surface
         shadowColor: 'rgba(200, 146, 10, 0.2)', // Amber tint shadow
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,

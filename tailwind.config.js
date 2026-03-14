@@ -14,48 +14,49 @@ module.exports = {
             },
         },
         colors: {
-            // Luminous Gold Sanctuary Palette
+            // Divine Yellow Heavenly Palette
             sanctuary: {
-                bg: '#FFFCF2', // Ivory background
-                surface: 'rgba(255,252,242,0.55)',
-                'surface-solid': '#FFF8E8', // Warm Cream
-                gold: '#E8B830', // Bright Gold
-                'gold-deep': '#C8960C', // Deep Gold
-                glow: '#FFD060',
-                text: '#1A1000',
-                'text-muted': '#5C4A1E',
-                'text-light': '#8B7340',
-                border: 'rgba(200,146,10,0.14)', // Subtle amber border
-                aura: '#FFE8A0',
-                error: '#8B1A1A',
-                success: '#1A5C2D',
+                bg: '#FFFFFF', // Pure white background
+                surface: 'rgba(255,255,255,0.85)',
+                'surface-solid': '#FCF5DF', // Soft warm white
+                gold: '#FACC15', // Divine Yellow
+                'gold-deep': '#EAB308', // Deeper Yellow
+                glow: '#FEF08A',
+                text: '#332900',
+                'text-muted': '#715A00',
+                'text-light': '#A18200',
+                border: 'rgba(250,204,21,0.2)', // Soft yellow border
+                aura: '#FEF9C3',
+                error: '#FB7185',
+                success: '#34D399',
             },
             // Backward-compat aliases (monk → sanctuary)
             monk: {
-                primary: '#D4A020',
-                secondary: '#5C4A1E',
-                accent: '#FFD060',
-                bg: '#FFFBF0',
-                text: '#1A1000',
-                surface: '#FFF8E8',
-                glass: 'rgba(255,251,240,0.55)',
-                'surface-highlight': '#FFF5DE',
-                'deep-red': '#8B1A1A',
-                gold: '#D4A020',
-                'dark-surface': '#FFF5DE',
-                'dark-bg': '#FFFBF0',
-                aura: '#FFE8A0',
+                primary: '#FACC15',
+                secondary: '#715A00',
+                accent: '#FEF08A',
+                bg: '#FFFFFF',
+                text: '#332900',
+                surface: '#FFFFFF',
+                glass: 'rgba(255,255,255,0.85)',
+                'surface-highlight': '#FEF9C3',
+                'deep-red': '#FB7185',
+                gold: '#FACC15',
+                'dark-surface': '#FCF5DF',
+                'dark-bg': '#FFFFFF',
+                aura: '#FEF9C3',
             },
             earth: {
-                100: '#FFFBF0',
-                200: '#FFF5DE',
-                300: '#FFE8A0',
-                400: '#FFD060',
-                500: '#D4A020',
-                600: '#B8820A',
-                700: '#8B6208',
-                800: '#5C4A1E',
-                900: '#1A1000',
+                // Divine Yellow progression
+                100: '#FFFFFF',
+                200: '#FFFCF5',
+                300: '#FCF5DF',
+                400: '#FEF9C3',
+                500: '#FEF08A',
+                600: '#FDE047',
+                700: '#FACC15',
+                800: '#EAB308',
+                900: '#CA8A04',
             },
             white: '#FFFFFF',
             black: '#000000',

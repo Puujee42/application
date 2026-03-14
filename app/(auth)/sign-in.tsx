@@ -466,7 +466,7 @@ const st = StyleSheet.create({
         paddingHorizontal: 28,
         width: '100%',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,252,242,0.8)',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
     },
     googleBtnText: {
         fontSize: 14,

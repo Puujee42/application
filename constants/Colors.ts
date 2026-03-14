@@ -5,49 +5,48 @@
 
 export const Colors = {
     light: {
-        text: '#1A1000',         // Deep Bronze
-        background: '#FFFBF0',   // Warm Ivory
-        tint: '#D4A020',         // Primary Gold
-        icon: '#B8820A',         // Deep Gold
-        tabIconDefault: '#B8820A80', // Muted Gold
-        tabIconSelected: '#D4A020',
-        border: 'rgba(200,146,10,0.18)', // Gold Glass Border
+        text: '#332900',         
+        background: '#FFFFFF',   
+        tint: '#FACC15',         
+        icon: '#EAB308',         
+        tabIconDefault: '#EAB30880', 
+        tabIconSelected: '#FACC15',
+        border: 'rgba(250,204,21,0.2)', 
     },
     dark: {
-        // Keep luminous — no dark mode shift
-        text: '#1A1000',
-        background: '#FFFBF0',
-        tint: '#D4A020',
-        icon: '#B8820A',
-        tabIconDefault: '#B8820A80',
-        tabIconSelected: '#D4A020',
-        border: 'rgba(200,146,10,0.18)',
+        text: '#332900',         
+        background: '#FFFFFF',   
+        tint: '#FACC15',         
+        icon: '#EAB308',         
+        tabIconDefault: '#EAB30880', 
+        tabIconSelected: '#FACC15',
+        border: 'rgba(250,204,21,0.2)', 
     },
-    // Luminous Gold Sanctuary tokens
+    // Divine Yellow Palette
     sanctuary: {
-        bg: '#FFFCF2',           // Ivory
-        surface: 'rgba(255,252,242,0.55)', // Glass surface
-        surfaceSolid: '#FFF8E8', // Warm Cream
-        gold: '#E8B830',         // Bright Gold
-        goldDeep: '#C8960C',     // Deep Gold
-        glow: '#FFD060',         // Glow / highlights
-        text: '#1A1000',         // Deep Bronze
-        textMuted: '#5C4A1E',    // Muted bronze for subtitles
-        textLight: '#8B7340',    // Light bronze for placeholders
-        border: 'rgba(200,146,10,0.14)', // Amber border
-        aura: '#FFE8A0',         // Soft golden aura
-        error: '#8B1A1A',        // Deep crimson
-        success: '#1A5C2D',      // Deep emerald
+        bg: '#FFFFFF',
+        surface: 'rgba(255,255,255,0.85)',
+        surfaceSolid: '#FCF5DF',
+        gold: '#FACC15',
+        goldDeep: '#EAB308',
+        glow: '#FEF08A',
+        text: '#332900',
+        textMuted: '#715A00',
+        textLight: '#A18200',
+        border: 'rgba(250,204,21,0.2)',
+        aura: '#FEF9C3',
+        error: '#FB7185',
+        success: '#34D399',
     },
     earth: {
-        100: '#FFFBF0',
-        200: '#FFF5DE',
-        300: '#FFE8A0',
-        400: '#FFD060',
-        500: '#D4A020',
-        600: '#B8820A',
-        700: '#8B6208',
-        800: '#5C4A1E',
-        900: '#1A1000',
+        100: '#FFFFFF',
+        200: '#FFFCF5',
+        300: '#FCF5DF',
+        400: '#FEF9C3',
+        500: '#FEF08A',
+        600: '#FDE047',
+        700: '#FACC15',
+        800: '#EAB308',
+        900: '#CA8A04',
     },
 };

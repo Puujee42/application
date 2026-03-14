@@ -2,91 +2,91 @@ import { Platform } from 'react-native';
 
 export const COLORS = {
   // Backgrounds
-  bg: '#FFFCF2',   // Ivory
-  bgWarm: '#FFF8E8',   // Warm Cream
-  surface: 'rgba(255,252,242,0.55)',  // Glass surface
+  bg: '#FFFFFF',   // Pure white
+  bgWarm: '#FFFCF5',   // Warm divine white
+  surface: 'rgba(255, 255, 255, 0.85)',  // Glass surface
 
-  // Gold palette
-  gold: '#E8B830',   // Bright Gold
-  goldMid: '#C8960C',   // Deep Gold
-  goldBright: '#FFCF40',   // Highlight
-  glow: '#FFD060',   // Shine, shimmer
-  goldPale: '#FFF3C4',   // Chip bg, badge bg
-  goldSoft: '#FFE8A0',   // Hover bg
-  amber: '#B87A08',   // Gradient төгсгөл, dark accent
+  // Divine Yellow palette (keeping keys like 'gold'/'amber' for backward compatibility)
+  gold: '#FACC15',   // Divine Yellow (Main accent)
+  goldMid: '#EAB308',   // Deeper Divine Yellow
+  goldBright: '#FEF08A',   // Highlight / glow
+  glow: '#FEF08A',   // Shine, shimmer
+  goldPale: '#FEF9C3',   // Chip bg, badge bg
+  goldSoft: '#FCF5DF',   // Hover bg
+  amber: '#CA8A04',   // Gradient end, dark accent
 
   // Dividers & borders
-  border: 'rgba(200,150,12,0.13)',  // Карт хүрээ
-  borderMed: 'rgba(200,150,12,0.22)',  // Input focus, active
-  divider: 'rgba(200,150,12,0.07)',  // iOS inset separator
+  border: 'rgba(250, 204, 21, 0.2)',  // Карт хүрээ
+  borderMed: 'rgba(250, 204, 21, 0.4)',  // Input focus, active
+  divider: 'rgba(250, 204, 21, 0.15)',  // iOS inset separator
 
   // Typography
-  text: '#1C1200',   // Гол текст
-  textSub: '#6B4E1A',   // Дэд текст
-  textMute: '#A07838',   // Caption, placeholder
-  textFaint: '#C8A858',   // Chevron, hint
+  text: '#332900',   // Deep golden brown (Softer than pure black)
+  textSub: '#715A00',   // Muted brown
+  textMute: '#A18200',   // Caption, placeholder
+  textFaint: '#D4AA00',   // Chevron, hint
 
   // Semantic
-  success: '#15803D',
-  error: '#B91C1C',
-  warning: '#D97706',
+  success: '#34D399',
+  error: '#FB7185', // Soft rose red
+  warning: '#FBBF24', // Soft golden yellow
 
   // Added for compatibility with existing screens
-  deepGold: '#A67800',
-  textLight: '#F3EAC8',
-  textMid: '#A07838',
+  deepGold: '#EAB308', // Soft gold
+  textLight: '#FEF9C3', // Light gold
+  textMid: '#A18200',
   card: '#FFFFFF',
   white: '#FFFFFF',
 } as const;
 
 export const SHADOWS = {
-  // Бүх shadow ЗӨВХӨН gold-based, хэзээ ч #000 хэрэглэхгүй
+  // Shadows based on soft divine yellow
   xs: {
-    shadowColor: '#B87A08',
+    shadowColor: '#FACC15',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 1,
   },
   sm: {
-    shadowColor: '#B87A08',
+    shadowColor: '#FACC15',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 2,
   },
   md: {
-    shadowColor: '#B87A08',
+    shadowColor: '#FACC15',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.2,
     shadowRadius: 14,
     elevation: 4,
   },
   lg: {
-    shadowColor: '#C8960C',
+    shadowColor: '#EAB308',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.25,
     shadowRadius: 20,
     elevation: 7,
   },
   glow: {
-    shadowColor: '#E8B830',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.32,
-    shadowRadius: 18,
+    shadowColor: '#FEF08A',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
     elevation: 8,
   },
   card: {
-    shadowColor: '#B87A08',
+    shadowColor: '#715A00',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.10,
-    shadowRadius: 14,
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 4,
   },
   gold: {
-    shadowColor: '#C8960C',
+    shadowColor: '#FACC15',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.20,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 5,
   },
