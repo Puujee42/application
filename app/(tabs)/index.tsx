@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getMonks } from '../../lib/api';
+import { getMonks, getRecentConversations } from '../../lib/api';
 import { Bell, Star } from 'lucide-react-native';
 import { useUser } from '../../lib/useClerkSafe';
 import { useUserStore } from '../../store/userStore';
@@ -55,12 +55,19 @@ export default function HomeScreen() {
         queryKey: ['monks'],
         queryFn: getMonks,
     });
+    
+    // Fetch recent conversations for the new "Top chatting with" section
+    const { data: recentChats, refetch: refetchChats } = useQuery({
+        queryKey: ['recent-conversations'],
+        queryFn: getRecentConversations,
+        enabled: !!dbUser || !!customUser || !!clerkUser,
+    });
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
-        await refetch();
+        await Promise.all([refetch(), refetchChats()]);
         setRefreshing(false);
-    }, [refetch]);
+    }, [refetch, refetchChats]);
 
     const displayName = dbUser?.firstName || customUser?.firstName || clerkUser?.firstName || 'Зочин';
     const avatarUri = (dbUser as any)?.image || dbUser?.avatar || clerkUser?.imageUrl || 'https://i.pravatar.cc/150?u=self';
@@ -151,29 +158,49 @@ export default function HomeScreen() {
                         </TouchableScale>
                     </Reanimated.View>
 
-                    {/* ===== SERVICES SECTION ===== */}
+                    {/* ===== RECENT CHATS (REPLACED SERVICES) ===== */}
                     <Reanimated.View entering={FadeInDown.delay(160).duration(500)}>
-                        <Text style={styles.sectionTitle}>Үйлчилгээ</Text>
-                        <View style={styles.servicesGrid}>
-                            {SERVICES.map((service, index) => (
-                                <TouchableScale
-                                    key={index}
-                                    style={styles.serviceCard}
-                                    onPress={() => {
-                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                        router.push('/(tabs)/monks');
-                                    }}
-                                >
-                                    <LinearGradient
-                                        colors={[COLORS.goldPale, COLORS.goldSoft]}
-                                        style={styles.serviceIconBg}
+                        <Text style={styles.sectionTitle}>Сүүлд чатласан</Text>
+                        
+                        {!recentChats || recentChats.length === 0 ? (
+                            <View style={[styles.serviceCard, { width: '100%', flexDirection: 'row', alignItems: 'center', marginBottom: 28, padding: 20 }]}>
+                                <View style={[styles.serviceIconBg, { marginBottom: 0, marginRight: 16 }]}>
+                                    <Text style={styles.serviceEmoji}>💬</Text>
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={[styles.monkName, { fontSize: 13, marginBottom: 4 }]}>Одоогоор чат алга байна</Text>
+                                    <Text style={[styles.monkSubtitle, { marginBottom: 0, fontSize: 11 }]}>Аль нэг үзмэрчийн профайл руу орж зурвас бичээрэй.</Text>
+                                </View>
+                            </View>
+                        ) : (
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 28, marginHorizontal: -20, paddingHorizontal: 20 }} contentContainerStyle={{ paddingRight: 40, gap: 12 }}>
+                                {recentChats.slice(0, 4).map((chat, index) => (
+                                    <TouchableScale
+                                        key={chat.partnerId}
+                                        style={{ width: 140, backgroundColor: COLORS.surface, borderRadius: 20, borderWidth: 1, borderColor: COLORS.border, padding: 16, alignItems: 'center', ...SHADOWS.sm }}
+                                        onPress={() => {
+                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                            router.push(`/messages/${chat.partnerId}`);
+                                        }}
                                     >
-                                        <Text style={styles.serviceEmoji}>{service.emoji}</Text>
-                                    </LinearGradient>
-                                    <Text style={styles.serviceLabel}>{service.label}</Text>
-                                </TouchableScale>
-                            ))}
-                        </View>
+                                        <Image
+                                            source={{ uri: chat.partner?.image || 'https://via.placeholder.com/150' }}
+                                            style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 12, borderWidth: 2, borderColor: COLORS.goldPale, backgroundColor: '#f3f4f6' }}
+                                            contentFit="cover"
+                                        />
+                                        {chat.partner?.isSpecial && (
+                                            <View style={{ position: 'absolute', top: 12, right: 12, width: 16, height: 16, borderRadius: 8, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: COLORS.surface }}>
+                                                <Star size={8} color="#FFF" fill="#FFF" />
+                                            </View>
+                                        )}
+                                        <Text style={[styles.monkName, { textAlign: 'center', marginBottom: 4, fontSize: 13 }]} numberOfLines={1}>{chat.partner?.name || 'Unknown'}</Text>
+                                        <Text style={[styles.monkSubtitle, { textAlign: 'center', marginBottom: 0, fontSize: 11 }]} numberOfLines={1}>
+                                            {chat.lastMessage.text ? chat.lastMessage.text : '📷 Зураг'}
+                                        </Text>
+                                    </TouchableScale>
+                                ))}
+                            </ScrollView>
+                        )}
                     </Reanimated.View>
 
                     {/* ===== TOP MONKS ===== */}

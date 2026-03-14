@@ -2,14 +2,14 @@ import { Platform } from 'react-native';
 
 export const COLORS = {
   // Backgrounds
-  bg: '#FDFAF2',   // Гол дэвсгэр — зөөлөн хивэг
-  bgWarm: '#FFF8E8',   // Дулаан дэвсгэр — input, card доторлогоо
-  surface: 'rgba(255,252,242,0.94)',  // Карт, modal гадаргуу
+  bg: '#FFFCF2',   // Ivory
+  bgWarm: '#FFF8E8',   // Warm Cream
+  surface: 'rgba(255,252,242,0.55)',  // Glass surface
 
-  // Gold palette — аппын гол өнгө
-  gold: '#C8960C',   // Primary — товч, link, badge
-  goldMid: '#D4A820',   // Accent
-  goldBright: '#E8B830',   // Highlight, gradient эхлэл
+  // Gold palette
+  gold: '#E8B830',   // Bright Gold
+  goldMid: '#C8960C',   // Deep Gold
+  goldBright: '#FFCF40',   // Highlight
   glow: '#FFD060',   // Shine, shimmer
   goldPale: '#FFF3C4',   // Chip bg, badge bg
   goldSoft: '#FFE8A0',   // Hover bg

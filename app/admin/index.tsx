@@ -50,6 +50,7 @@ export default function AdminDashboard() {
         { label: 'Үзмэрч', value: adminData?.stats?.totalMonks || 0, emoji: '🔮' },
         { label: 'Нийт орлого', value: `${totalRevenue.toLocaleString()}₮`, emoji: '💰', isGold: true },
         { label: 'Хүсэлтүүд', value: pendingApps.length, emoji: '📝', hasBadge: pendingApps.length > 0 },
+        { label: 'Үйлчилгээ', value: adminData?.services?.length || 0, emoji: '⚙️' },
     ];
 
     const menuItems = [
@@ -57,6 +58,7 @@ export default function AdminDashboard() {
         { label: 'Хэрэглэгч удирдах', emoji: '👤', route: '/admin/users' },
         { label: 'Лам болох хүсэлтүүд', emoji: '📝', route: '/admin/applications', badge: pendingApps.length },
         { label: 'Үзмэрч удирдах', emoji: '🔮', route: '/admin/monks' },
+        { label: 'Үйлчилгээ удирдах', emoji: '⚙️', route: '/admin/services' },
         { label: 'Блог удирдах', emoji: '📰', route: '/admin/blog' },
     ];
 

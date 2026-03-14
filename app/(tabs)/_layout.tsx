@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
-import { Home, Sparkles, User, BookOpen } from 'lucide-react-native';
-import { View, Platform } from 'react-native';
+import { Home, Sparkles, User, BookOpen, MessageCircle } from 'lucide-react-native';
+import { View, Platform, StyleSheet } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { COLORS } from '../../design-system/theme';
 
 export default function TabLayout() {
@@ -11,18 +12,28 @@ export default function TabLayout() {
                 tabBarActiveTintColor: COLORS.gold,
                 tabBarInactiveTintColor: COLORS.textFaint,
                 tabBarStyle: {
-                    backgroundColor: 'rgba(253,250,242,0.95)',
-                    ...((Platform.OS === 'web' || Platform.OS === 'ios') && { backdropFilter: 'blur(20px)' }),
+                    position: 'absolute',
                     borderTopWidth: 0,
                     height: Platform.OS === 'ios' ? 84 : 62,
                     paddingBottom: Platform.OS === 'ios' ? 26 : 6,
                     paddingTop: 8,
-                    shadowColor: '#B87A08',
+                    shadowColor: '#C8960C',
                     shadowOffset: { width: 0, height: -2 },
-                    shadowOpacity: 0.07,
+                    shadowOpacity: 0.1,
                     shadowRadius: 12,
                     elevation: 12,
+                    backgroundColor: 'transparent',
                 } as any,
+                tabBarBackground: () => (
+                    <BlurView
+                        tint="light"
+                        intensity={40}
+                        style={[
+                            StyleSheet.absoluteFillObject,
+                            { backgroundColor: 'rgba(255, 252, 242, 0.45)' }
+                        ]}
+                    />
+                ),
                 tabBarLabelStyle: {
                     fontSize: 10,
                     fontWeight: '600',
@@ -72,6 +83,23 @@ export default function TabLayout() {
                     tabBarIcon: ({ color, focused }) => (
                         <View style={{ alignItems: 'center', paddingTop: 2 }}>
                             <Sparkles size={22} color={color} strokeWidth={focused ? 2.1 : 1.6} />
+                            {focused && (
+                                <View style={{
+                                    width: 4, height: 4, borderRadius: 2,
+                                    backgroundColor: COLORS.gold, marginTop: 4,
+                                }} />
+                            )}
+                        </View>
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="messages"
+                options={{
+                    title: 'Чат',
+                    tabBarIcon: ({ color, focused }) => (
+                        <View style={{ alignItems: 'center', paddingTop: 2 }}>
+                            <MessageCircle size={22} color={color} strokeWidth={focused ? 2.1 : 1.6} />
                             {focused && (
                                 <View style={{
                                     width: 4, height: 4, borderRadius: 2,

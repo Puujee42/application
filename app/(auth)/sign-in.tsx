@@ -58,8 +58,12 @@ export default function SignInScreen() {
     };
 
     const onSignIn = useCallback(async () => {
-        if (!phone || !password) {
-            setError('Утасны дугаар болон нууц үгээ оруулна уу');
+        if (!phone || phone.length !== 8) {
+            setError('8 оронтой утасны дугаар оруулна уу');
+            return;
+        }
+        if (!password) {
+            setError('Нууц үгээ оруулна уу');
             return;
         }
 

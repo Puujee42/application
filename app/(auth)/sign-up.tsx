@@ -65,7 +65,7 @@ export default function SignUpScreen() {
             setError('Овгоо оруулна уу');
             return false;
         }
-        if (!phone || phone.length < 8) {
+        if (!phone || phone.length !== 8) {
             setError('8 оронтой утасны дугаар оруулна уу');
             return false;
         }

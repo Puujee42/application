@@ -14,6 +14,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import TouchableScale from '../../components/ui/TouchableScale';
 import { Monk } from '../../src/types/schema';
 import api from '../../lib/api';
+import { mapMonkToUI } from '../../lib/mappers';
 import { COLORS, SHADOWS, FONT } from '../../design-system/theme';
 
 // ─── CONSTANTS ────────────────────────────────────────
@@ -28,17 +29,10 @@ const FILTER_MAP: Record<string, string[]> = {
 
 const BLURHASH = 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
 
-// ─── HELPERS ──────────────────────────────────────────
 const t = (data: { mn?: string; en?: string } | string | undefined): string => {
     if (!data) return '';
     if (typeof data === 'string') return data;
     return data.mn || data.en || '';
-};
-
-const formatPrice = (monk: Monk): string => {
-    const price = monk.services?.[0]?.price;
-    if (price) return `${price.toLocaleString()}₮`;
-    return monk.isSpecial ? '888,000₮' : '50,000₮';
 };
 
 // ─── SKELETON ─────────────────────────────────────────
@@ -118,19 +112,20 @@ export default function MonksScreen() {
         return result;
     }, [monks, activeFilter, searchText]);
 
-    // ── Render monk card ──
     const renderMonkCard = useCallback(({ item, index }: { item: Monk; index: number }) => {
+        const uiModel = mapMonkToUI(item);
+
         return (
             <Animated.View entering={FadeInDown.delay(Math.min(index * 80, 320)).duration(500)}>
                 <TouchableScale
                     style={styles.monkCard}
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        router.push(`/monk/${item._id}`);
+                        router.push(`/monk/${uiModel.id}`);
                     }}
                 >
                     {/* Special badge */}
-                    {item.isSpecial && (
+                    {uiModel.isSpecial && (
                         <View style={styles.specialBadge}>
                             <Text style={styles.specialBadgeText}>★ Онцлох</Text>
                         </View>
@@ -140,7 +135,7 @@ export default function MonksScreen() {
                     <View style={styles.cardContent}>
                         <View style={styles.monkCardRow}>
                             <Image
-                                source={{ uri: item.image || 'https://via.placeholder.com/150' }}
+                                source={{ uri: uiModel.avatarUrl }}
                                 style={styles.monkAvatar}
                                 contentFit="cover"
                                 placeholder={BLURHASH}
@@ -148,13 +143,13 @@ export default function MonksScreen() {
                             />
 
                             <View style={styles.monkDetails}>
-                                <Text style={styles.monkName} numberOfLines={1}>{t(item.name)}</Text>
-                                <Text style={styles.monkTitle} numberOfLines={1}>{t(item.title)}</Text>
+                                <Text style={styles.monkName} numberOfLines={1}>{uiModel.name}</Text>
+                                <Text style={styles.monkTitle} numberOfLines={1}>{uiModel.title}</Text>
 
                                 {/* Tag chips */}
-                                {item.specialties && item.specialties.length > 0 && (
+                                {uiModel.tags.length > 0 && (
                                     <View style={styles.chipRow}>
-                                        {item.specialties.slice(0, 2).map((sp, i) => (
+                                        {uiModel.tags.slice(0, 2).map((sp, i) => (
                                             <View key={i} style={styles.chip}>
                                                 <Text style={styles.chipText}>{sp}</Text>
                                             </View>
@@ -169,16 +164,12 @@ export default function MonksScreen() {
                                             <Star key={i} size={10} color={COLORS.goldBright} fill={COLORS.goldBright} />
                                         ))}
                                     </View>
-                                    <Text style={styles.ratingText}>
-                                        {(item as any).rating?.toFixed(1) || '4.9'}
-                                    </Text>
-                                    <Text style={styles.reviewCount}>
-                                        ({item.yearsOfExperience || 0} жил)
-                                    </Text>
+                                    <Text style={styles.ratingText}>{uiModel.rating}</Text>
+                                    <Text style={styles.reviewCount}>{uiModel.experienceText}</Text>
                                 </View>
                             </View>
 
-                            <Text style={styles.monkPrice}>{formatPrice(item)}</Text>
+                            <Text style={styles.monkPrice}>{uiModel.priceFormatted}</Text>
                         </View>
 
                         {/* CTA Button */}

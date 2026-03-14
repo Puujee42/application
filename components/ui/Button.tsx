@@ -1,7 +1,10 @@
 import React from 'react';
-import { TouchableOpacity, ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../design-system/theme';
+import TouchableScale from './TouchableScale';
+import { Colors } from '../../constants/Colors';
 
 interface ButtonProps {
     title: string;
@@ -11,7 +14,8 @@ interface ButtonProps {
     isLoading?: boolean;
     disabled?: boolean;
     icon?: React.ReactNode;
-    className?: string; // For additional tailwind classes
+    className?: string;
+    style?: any;
 }
 
 export function Button({
@@ -23,30 +27,13 @@ export function Button({
     disabled = false,
     icon,
     className,
+    style,
 }: ButtonProps) {
 
     const handlePress = async () => {
         if (!disabled && !isLoading) {
-            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             onPress();
-        }
-    };
-
-    const getVariantStyle = () => {
-        switch (variant) {
-            case 'primary':
-                // Bright Warm: Amber background with soft shadow
-                return 'bg-[#D97706] shadow-md shadow-amber-600/20';
-            case 'secondary':
-                // Cream background with soft warm border
-                return 'bg-[#FFFFFF] border border-[#E8E0D5] shadow-sm';
-            case 'outline':
-                // Gold/Amber border, transparent bg
-                return 'bg-transparent border border-[#D97706]';
-            case 'ghost':
-                return 'bg-transparent';
-            default:
-                return 'bg-[#D97706] shadow-md shadow-amber-600/20';
         }
     };
 
@@ -66,38 +53,99 @@ export function Button({
     const getTextStyle = () => {
         switch (variant) {
             case 'primary':
-                // Inverse text (Cream) on colored background
-                return 'text-[#FDFBF7] tracking-widest uppercase text-sm';
+                return 'text-sanctuary-surfaceSolid tracking-widest uppercase text-sm font-bold shadow-sm shadow-black/20';
             case 'outline':
             case 'ghost':
-                // Warm amber text
-                return 'text-[#D97706] tracking-widest uppercase text-sm';
+                return 'text-sanctuary-goldDeep tracking-widest uppercase text-sm font-semibold';
             case 'secondary':
-                // Deep warm brown text
-                return 'text-[#291E14] tracking-wide';
+                return 'text-sanctuary-text tracking-wide font-medium';
             default:
-                return 'text-[#FDFBF7] tracking-widest uppercase text-sm';
+                return 'text-sanctuary-surfaceSolid tracking-widest uppercase text-sm font-bold';
         }
     };
 
+    const renderContent = () => {
+        if (isLoading) {
+            return <ActivityIndicator color={variant === 'primary' ? '#FFF' : Colors.sanctuary.goldDeep} />;
+        }
+        return (
+            <View className="flex-row items-center justify-center">
+                {icon && <View className="mr-2">{icon}</View>}
+                <Text className={`text-center ${getTextStyle()} ${size === 'lg' ? 'text-lg' : 'text-base'}`}>
+                    {title}
+                </Text>
+            </View>
+        );
+    };
+
+    const baseStyle = [styles.buttonBase, style];
+
+    if (variant === 'primary') {
+        return (
+            <TouchableScale
+                onPress={handlePress}
+                disabled={disabled || isLoading}
+                className={`${disabled ? 'opacity-50' : ''} ${className || ''}`}
+                style={baseStyle}
+                scaleTo={0.94}
+            >
+                <LinearGradient
+                    colors={['#E8B830', '#C8960C']} // Bright Gold to Amber/Deep Gold
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[StyleSheet.absoluteFill, styles.gradientBg]}
+                />
+                <View className={`${getSizeStyle()} items-center justify-center`}>
+                    {renderContent()}
+                </View>
+            </TouchableScale>
+        );
+    }
+
     return (
-        <TouchableOpacity
+        <TouchableScale
             onPress={handlePress}
             disabled={disabled || isLoading}
-            activeOpacity={0.8}
-            className={`rounded-xl flex-row items-center justify-center ${getVariantStyle()} ${getSizeStyle()} ${disabled ? 'opacity-50' : ''
-                } ${className}`}
+            className={`items-center justify-center ${getSizeStyle()} ${disabled ? 'opacity-50' : ''} ${className || ''}`}
+            style={[
+                baseStyle,
+                variant === 'secondary' && styles.secondary,
+                variant === 'outline' && styles.outline,
+                variant === 'ghost' && styles.ghost,
+            ]}
+            scaleTo={0.96}
         >
-            {isLoading ? (
-                <ActivityIndicator color={variant === 'secondary' ? COLORS.textMid : COLORS.gold} />
-            ) : (
-                <>
-                    {icon && <View className="mr-2">{icon}</View>}
-                    <Text className={`font-semibold text-center ${getTextStyle()} ${size === 'lg' ? 'text-lg' : 'text-base'}`}>
-                        {title}
-                    </Text>
-                </>
-            )}
-        </TouchableOpacity>
+            {renderContent()}
+        </TouchableScale>
     );
 }
+
+const styles = StyleSheet.create({
+    buttonBase: {
+        borderRadius: 15,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    gradientBg: {
+        borderRadius: 15,
+    },
+    secondary: {
+        backgroundColor: '#FFF8E8', // Warm Cream
+        borderWidth: 1,
+        borderColor: 'rgba(200,146,10,0.14)',
+        shadowColor: 'rgba(200, 146, 10, 0.1)',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    outline: {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: '#C8960C',
+    },
+    ghost: {
+        backgroundColor: 'transparent',
+    }
+});

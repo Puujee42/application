@@ -102,6 +102,43 @@ export default function MonkBookingScreen() {
     const days = useMemo(() => generateDays(14), []);
     const [selectedDate, setSelectedDate] = useState(days[0]);
     const [selectedTime, setSelectedTime] = useState('');
+    
+    // Dynamic availability logic
+    const availableTimeSlots = useMemo(() => {
+        const now = new Date();
+        const isToday = selectedDate.getDate() === now.getDate() && 
+                        selectedDate.getMonth() === now.getMonth() && 
+                        selectedDate.getFullYear() === now.getFullYear();
+        
+        return TIME_SLOTS.map(time => {
+            const [hour] = time.split(':').map(Number);
+            let isAvailable = true;
+            
+            // Disable past hours for today
+            if (isToday && hour <= now.getHours() + 1) { // Adding 1hr buffer
+                isAvailable = false;
+            }
+            
+            // Mock unavailable slots logic based on date
+            const seed = selectedDate.getDate() + hour;
+            if (seed % 7 === 0 || seed % 11 === 0) {
+                isAvailable = false;
+            }
+            
+            return { time, isAvailable };
+        });
+    }, [selectedDate]);
+
+    // Reset selected time if the new date makes it unavailable
+    useEffect(() => {
+        if (selectedTime) {
+            const slot = availableTimeSlots.find(s => s.time === selectedTime);
+            if (!slot || !slot.isAvailable) {
+                setSelectedTime('');
+            }
+        }
+    }, [availableTimeSlots]);
+
     const [selectedService, setSelectedService] = useState<Service | null>(null);
     const [specialRequests, setSpecialRequests] = useState('');
     const [bookingSuccess, setBookingSuccess] = useState(false);
@@ -396,17 +433,28 @@ export default function MonkBookingScreen() {
                     <Animated.View entering={FadeInDown.delay(320)}>
                         <Text style={s.sectionTitle}>Цаг сонгох</Text>
                         <View style={s.timeGrid}>
-                            {TIME_SLOTS.map((time) => {
+                            {availableTimeSlots.map(({ time, isAvailable }) => {
                                 const isSel = selectedTime === time;
                                 return (
-                                    <TouchableScale key={time} onPress={() => { Haptics.selectionAsync(); setSelectedTime(time); }} style={s.timeCol}>
+                                    <TouchableScale 
+                                        key={time} 
+                                        onPress={() => { 
+                                            if (isAvailable) {
+                                                Haptics.selectionAsync(); 
+                                                setSelectedTime(time); 
+                                            } else {
+                                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                                            }
+                                        }} 
+                                        style={[s.timeCol, !isAvailable && { opacity: 0.4 }]}
+                                    >
                                         {isSel ? (
                                             <LinearGradient colors={[COLORS.goldBright, COLORS.gold, COLORS.amber]} style={[s.timeCardActive, SHADOWS.glow]}>
                                                 <Text style={s.timeCardTextActive}>{time}</Text>
                                             </LinearGradient>
                                         ) : (
-                                            <View style={s.timeCardInactive}>
-                                                <Text style={s.timeCardTextInactive}>{time}</Text>
+                                            <View style={[s.timeCardInactive, !isAvailable && s.timeCardDisabled]}>
+                                                <Text style={[s.timeCardTextInactive, !isAvailable && s.timeCardTextDisabled]}>{time}</Text>
                                             </View>
                                         )}
                                     </TouchableScale>
@@ -607,6 +655,8 @@ const s = StyleSheet.create({
     timeCardTextActive: { color: '#1C0E00', fontWeight: '700', fontSize: 13, letterSpacing: 0.5 },
     timeCardInactive: { paddingVertical: 10, borderRadius: 12, alignItems: 'center', backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border },
     timeCardTextInactive: { color: COLORS.text, fontWeight: '700', fontSize: 13, letterSpacing: 0.5 },
+    timeCardDisabled: { backgroundColor: '#F3EAC820', borderColor: 'transparent' },
+    timeCardTextDisabled: { color: COLORS.textMute, textDecorationLine: 'line-through' },
 
     inputWrapper: { backgroundColor: COLORS.bgWarm, borderRadius: 14, borderWidth: 1, borderColor: COLORS.border, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 30 },
     input: { minHeight: 60, fontSize: 15, color: COLORS.text, textAlignVertical: 'top' },

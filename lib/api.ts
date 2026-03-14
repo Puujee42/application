@@ -194,6 +194,51 @@ export const sendChatMessage = async (bookingId: string, text: string, senderNam
 };
 
 // ==========================================
+// DIRECT MESSAGING
+// ==========================================
+
+export interface DirectMessage {
+    _id: string;
+    senderId: string;
+    receiverId: string;
+    senderName: string;
+    text: string;
+    imageUrl?: string;
+    createdAt: string;
+    read: boolean;
+}
+
+export interface ConversationSummary {
+    partnerId: string;
+    lastMessage: DirectMessage;
+    partner?: {
+        _id: string;
+        name: string;
+        image?: string;
+        role?: string;
+        isSpecial?: boolean;
+    };
+}
+
+// GET /api/messages
+export const getRecentConversations = async (): Promise<ConversationSummary[]> => {
+    const response = await api.get('/messages');
+    return response.data;
+};
+
+// GET /api/messages/{monkId}
+export const getDirectMessages = async (monkId: string): Promise<DirectMessage[]> => {
+    const response = await api.get(`/messages/${monkId}`);
+    return response.data;
+};
+
+// POST /api/messages/{monkId}
+export const sendDirectMessage = async (monkId: string, text: string, imageUrl?: string): Promise<DirectMessage> => {
+    const response = await api.post(`/messages/${monkId}`, { text, imageUrl });
+    return response.data;
+};
+
+// ==========================================
 // LIVEKIT — Exact same as parent website
 // ==========================================
 
@@ -307,6 +352,58 @@ export const getComments = async (): Promise<Comment[]> => {
 // POST /api/comments
 export const postComment = async (commentData: Partial<Comment>): Promise<Comment> => {
     const response = await api.post('/comments', commentData);
+    return response.data;
+};
+
+// ==========================================
+// ADMIN — Admin panel API helpers
+// ==========================================
+
+// GET /api/admin/data — Fetch all admin data (users, bookings, services, stats)
+export const adminGetData = async (userId: string): Promise<any> => {
+    const response = await api.get(`/admin/data?userId=${userId}`);
+    return response.data;
+};
+
+// PATCH /api/admin/users/{id} — Update a user (including monks)
+export const adminUpdateUser = async (id: string, data: any, userId?: string): Promise<any> => {
+    const response = await api.patch(`/admin/users/${id}${userId ? `?userId=${userId}` : ''}`, data);
+    return response.data;
+};
+
+// DELETE /api/admin/users/{id} — Delete a user
+export const adminDeleteUser = async (id: string, userId?: string): Promise<any> => {
+    const response = await api.delete(`/admin/users/${id}${userId ? `?userId=${userId}` : ''}`);
+    return response.data;
+};
+
+// PATCH /api/admin/applications/{id} — Approve/reject monk application
+export const adminProcessApplication = async (id: string, action: 'approve' | 'reject', userId?: string): Promise<any> => {
+    const response = await api.patch(`/admin/applications/${id}${userId ? `?userId=${userId}` : ''}`, { action });
+    return response.data;
+};
+
+// PATCH /api/admin/services/{id} — Approve/reject a service
+export const adminApproveRejectService = async (id: string, action: 'approve' | 'reject'): Promise<any> => {
+    const response = await api.patch(`/admin/services/${id}`, { action });
+    return response.data;
+};
+
+// PUT /api/admin/services/{id} — Update a service
+export const adminUpdateService = async (id: string, data: any): Promise<any> => {
+    const response = await api.put(`/admin/services/${id}`, data);
+    return response.data;
+};
+
+// DELETE /api/admin/services/{id} — Delete a service
+export const adminDeleteService = async (id: string, data?: any): Promise<any> => {
+    const response = await api.delete(`/admin/services/${id}`, { data });
+    return response.data;
+};
+
+// POST /api/admin/sync-services — Sync all services to all monks
+export const adminSyncServices = async (): Promise<any> => {
+    const response = await api.post('/admin/sync-services');
     return response.data;
 };
 

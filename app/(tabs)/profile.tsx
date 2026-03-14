@@ -181,7 +181,7 @@ export default function ProfileScreen() {
 
     const group2: MenuItem[] = [
         { emoji: '🔔', label: 'Мэдэгдэл', route: '/notifications', bg: ['#E0F2FE', '#BAE6FD'] },
-        { emoji: '💳', label: 'Төлбөрийн түүх', route: null, bg: ['#DCFCE7', '#A7F3D0'] },
+        { emoji: '💳', label: 'Төлбөрийн түүх', route: '/payment-history', bg: ['#DCFCE7', '#A7F3D0'] },
         { emoji: '⚙️', label: 'Тохиргоо', route: '/settings', bg: '#F3F4F6' },
     ];
     if (isAdmin) {

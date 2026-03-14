@@ -16,16 +16,16 @@ module.exports = {
         colors: {
             // Luminous Gold Sanctuary Palette
             sanctuary: {
-                bg: '#FFFBF0',
-                surface: 'rgba(255,251,240,0.55)',
-                'surface-solid': '#FFF8E8',
-                gold: '#D4A020',
-                'gold-deep': '#B8820A',
+                bg: '#FFFCF2', // Ivory background
+                surface: 'rgba(255,252,242,0.55)',
+                'surface-solid': '#FFF8E8', // Warm Cream
+                gold: '#E8B830', // Bright Gold
+                'gold-deep': '#C8960C', // Deep Gold
                 glow: '#FFD060',
                 text: '#1A1000',
                 'text-muted': '#5C4A1E',
                 'text-light': '#8B7340',
-                border: 'rgba(200,146,10,0.18)',
+                border: 'rgba(200,146,10,0.14)', // Subtle amber border
                 aura: '#FFE8A0',
                 error: '#8B1A1A',
                 success: '#1A5C2D',

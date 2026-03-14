@@ -12,6 +12,7 @@ import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import api from '../../lib/api';
+import { useUserStore } from '../../store/userStore';
 import { COLORS, SHADOWS } from '../../design-system/theme';
 
 const SERIF = Platform.OS === 'ios' ? 'Georgia' : 'serif';
@@ -37,6 +38,7 @@ const ROLE_OPTIONS = [
 export default function AdminMonks() {
     const router = useRouter();
     const queryClient = useQueryClient();
+    const { user: dbUser } = useUserStore();
     const [refreshing, setRefreshing] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [editing, setEditing] = useState<any>(null);
@@ -44,11 +46,13 @@ export default function AdminMonks() {
     const [activeTab, setActiveTab] = useState('basic');
 
     const { data: monks, isLoading, refetch } = useQuery({
-        queryKey: ['admin-monks'],
+        queryKey: ['admin-monks', dbUser?._id],
         queryFn: async () => {
-            const res = await api.get('/monks');
-            return res.data as any[];
+            const res = await api.get(`/admin/data?userId=${dbUser?._id}`);
+            const users = res.data?.users || [];
+            return users.filter((u: any) => u.role === 'monk') as any[];
         },
+        enabled: !!dbUser?._id,
     });
 
     const onRefresh = useCallback(async () => {
@@ -58,7 +62,8 @@ export default function AdminMonks() {
     const saveMutation = useMutation({
         mutationFn: async (data: any) => {
             if (editing?._id) {
-                return api.patch(`/monks/${editing._id}`, data);
+                const res = await api.patch(`/admin/users/${editing._id}?userId=${dbUser?._id}`, data);
+                return res.data;
             }
             return api.post('/monks', data);
         },
@@ -77,12 +82,16 @@ export default function AdminMonks() {
 
     const deleteMutation = useMutation({
         mutationFn: async (id: string) => {
-            const res = await api.patch(`/monks/${id}`, { role: 'user', monkStatus: 'rejected' });
+            const res = await api.delete(`/admin/users/${id}?userId=${dbUser?._id}`);
             return res.data;
         },
         onSuccess: () => {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             queryClient.invalidateQueries({ queryKey: ['admin-monks'] });
+            queryClient.invalidateQueries({ queryKey: ['admin-data'] });
+        },
+        onError: () => {
+            Alert.alert('Алдаа', 'Устгахад алдаа гарлаа');
         },
     });
 

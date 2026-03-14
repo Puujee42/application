@@ -214,20 +214,37 @@ export default function MonkDetailScreen() {
                     </View>
                 </Animated.ScrollView>
 
-                {/* Floating "Book Session" Glass Button */}
+                {/* Floating Action Buttons */}
                 <Animated.View
                     entering={FadeInUp.delay(800).duration(1000).springify()}
-                    style={{ position: 'absolute', bottom: 40, left: 24, right: 24, zIndex: 50 }}
+                    style={{ position: 'absolute', bottom: 40, left: 24, right: 24, zIndex: 50, flexDirection: 'row', gap: 12 }}
                 >
+                    {/* Chat Button */}
+                    <TouchableScale
+                        onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                            router.push(`/messages/${monk._id}`);
+                        }}
+                        style={{ flex: 1 }}
+                    >
+                        <GlassContainer className="h-[74px] flex-row items-center justify-center bg-white/60 rounded-full border border-white backdrop-blur-3xl shadow-xl" style={{ shadowColor: '#291E14', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20 }}>
+                            <Text className="text-[#291E14] font-bold text-[12px] uppercase tracking-[2px]">
+                                Зурвас
+                            </Text>
+                        </GlassContainer>
+                    </TouchableScale>
+
+                    {/* Book a Session Button */}
                     <TouchableScale
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                             router.push(`/booking/${monk._id}`);
                         }}
+                        style={{ flex: 2 }}
                     >
-                        <GlassContainer className="flex-row items-center justify-between bg-white/60 p-2 pl-8 rounded-full border border-white backdrop-blur-3xl shadow-2xl" style={{ shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 30 }}>
-                            <Text className="text-[#291E14] font-bold text-[13px] uppercase tracking-[4px]">
-                                Book a Session
+                        <GlassContainer className="h-[74px] flex-row items-center justify-between bg-white/60 pl-6 rounded-full border border-white backdrop-blur-3xl shadow-2xl p-2" style={{ shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 30 }}>
+                            <Text className="text-[#291E14] font-bold text-[12px] uppercase tracking-[3px]">
+                                Захиалах
                             </Text>
                             <View className="w-14 h-14 bg-[#D4AF37] rounded-full items-center justify-center shadow-lg" style={{ shadowColor: '#D4AF37', shadowOpacity: 0.4, shadowRadius: 10 }}>
                                 <Navigation size={22} color="#FDFBF7" style={{ transform: [{ rotate: '45deg' }], marginLeft: -2, marginTop: 2 }} />

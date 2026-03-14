@@ -25,16 +25,16 @@ export const Colors = {
     },
     // Luminous Gold Sanctuary tokens
     sanctuary: {
-        bg: '#FFFBF0',           // Warm Ivory
-        surface: 'rgba(255,251,240,0.55)', // Glass surface
-        surfaceSolid: '#FFF8E8', // Opaque surface fallback
-        gold: '#D4A020',         // Primary Gold
-        goldDeep: '#B8820A',     // Deep Gold
+        bg: '#FFFCF2',           // Ivory
+        surface: 'rgba(255,252,242,0.55)', // Glass surface
+        surfaceSolid: '#FFF8E8', // Warm Cream
+        gold: '#E8B830',         // Bright Gold
+        goldDeep: '#C8960C',     // Deep Gold
         glow: '#FFD060',         // Glow / highlights
         text: '#1A1000',         // Deep Bronze
         textMuted: '#5C4A1E',    // Muted bronze for subtitles
         textLight: '#8B7340',    // Light bronze for placeholders
-        border: 'rgba(200,146,10,0.18)',
+        border: 'rgba(200,146,10,0.14)', // Amber border
         aura: '#FFE8A0',         // Soft golden aura
         error: '#8B1A1A',        // Deep crimson
         success: '#1A5C2D',      // Deep emerald
